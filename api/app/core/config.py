@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     postgres_db: str
 
     auth_session_lifetime_hours: PositiveInt = 24
+    auth_session_cookie_name: str = "progressia_session"
 
     model_config = SettingsConfigDict(
         env_file=".env",
