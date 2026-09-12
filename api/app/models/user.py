@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
 from sqlalchemy.orm import Mapped, relationship
 
-from app.db.base import Base
+from app.db.base import Base, TimestampMixin
 
 # SQLAlchemyBaseUserTableUUID already contains :
 # users
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from app.models.organization_membership import OrganizationMembership
 
 class User(
+    TimestampMixin,
     SQLAlchemyBaseUserTableUUID,
     Base,
 ):
