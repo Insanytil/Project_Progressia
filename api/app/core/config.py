@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import SecretStr
+from pydantic import SecretStr, PositiveInt
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
 
@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     postgres_user: str
     postgres_password: SecretStr
     postgres_db: str
+
+    auth_session_lifetime_hours: PositiveInt = 24
 
     model_config = SettingsConfigDict(
         env_file=".env",
