@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
     auth_session_cookie_name: str = "progressia_session"
     auth_csrf_cookie_name: str = "progressia_csrf"
+    auth_csrf_header_name: str = "X-CSRF-Token"
 
     auth_cookie_secure: bool = False
 

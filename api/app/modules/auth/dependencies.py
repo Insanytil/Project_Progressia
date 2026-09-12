@@ -8,6 +8,7 @@ from fastapi_users.db import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.security import verify_secret
 from app.db.session import get_async_session
 from app.models.user import User
 from app.modules.auth.auth_service import (
@@ -77,6 +78,36 @@ async def get_authenticated_session(
             detail="Authentication required",
         ) from None
 
+SAFE_HTTP_METHODS = frozenset({
+    "GET",
+    "HEAD",
+    "OPTIONS",
+})
+
+async def require_csrf(
+    request: Request,
+    authenticated_session: AuthenticatedSession = Depends(
+        get_authenticated_session,
+    ),
+) -> AuthenticatedSession:
+    if request.method.upper() in SAFE_HTTP_METHODS:
+        return authenticated_session
+
+    csrf_token = request.headers.get(
+        settings.auth_csrf_header_name,
+    )
+
+    if csrf_token is None or not verify_secret(
+        csrf_token,
+        authenticated_session.session.csrf_token_hash,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CSRF validation failed",
+        )
+
+    return authenticated_session
+
 async def get_current_user(
     authenticated_session: AuthenticatedSession = Depends(
         get_authenticated_session,
@@ -92,4 +123,9 @@ CurrentUser = Annotated[
 AuthenticatedSessionDep = Annotated[
     AuthenticatedSession,
     Depends(get_authenticated_session),
+]
+
+CsrfProtectedSession = Annotated[
+    AuthenticatedSession,
+    Depends(require_csrf),
 ]

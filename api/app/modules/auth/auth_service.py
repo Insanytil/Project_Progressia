@@ -1,5 +1,3 @@
-# app/modules/auth/service.py
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta, UTC
 
@@ -20,10 +18,13 @@ from app.modules.auth.exceptions import (
     InvalidSessionError,
 )
 
+
+
 @dataclass(frozen=True, slots=True)
 class AuthenticatedSession:
     session: AuthSession
     user: User
+
 
 @dataclass(frozen=True, slots=True)
 class LoginResult:
