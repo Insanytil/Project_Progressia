@@ -1,0 +1,59 @@
+# Environment variables and local secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+
+# Test and coverage output
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Build and packaging output
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE and editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local agent settings
+.agents/
+.codex/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+.cache/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
