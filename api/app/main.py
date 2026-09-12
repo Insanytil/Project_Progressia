@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.app.db.session import get_async_session
+from app.db.session import get_async_session
 app = FastAPI(
     title="Progressia API",
     version="0.1.0",

@@ -28,7 +28,7 @@ class Settings(BaseSettings):
             password=self.postgres_password.get_secret_value(),
             host=self.postgres_host,
             port=self.postgres_port,
-            database=self.postgres_user,
+            database=self.postgres_db,
         )
 
 @lru_cache

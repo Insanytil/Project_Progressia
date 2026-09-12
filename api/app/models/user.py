@@ -1,6 +1,6 @@
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
 
-from api.app.db.base import Base
+from app.db.base import Base
 
 # SQLAlchemyBaseUserTableUUID already contains :
 # users

@@ -61,6 +61,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "fastapi-users", extra = ["sqlalchemy"] },
     { name = "pydantic-settings" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "uvicorn" },
 ]
 
@@ -71,6 +72,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.141.1" },
     { name = "fastapi-users", extras = ["sqlalchemy"], specifier = ">=15.0.5" },
     { name = "pydantic-settings", specifier = ">=2.15.0" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.52" },
     { name = "uvicorn", specifier = ">=0.52.4" },
 ]
 
