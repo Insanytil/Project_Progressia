@@ -106,3 +106,22 @@ class AuthService:
             session=auth_session,
             user=auth_session.user,
         )
+    async def logout(
+            self,
+            authenticated_session: AuthenticatedSession,
+    ) -> None:
+        await self.session_repository.delete(
+            authenticated_session.session,
+        )
+
+        await self.db.commit()
+
+    async def logout_all(
+            self,
+            user: User,
+    ) -> None:
+        await self.session_repository.delete_all_for_user(
+            user.id,
+        )
+
+        await self.db.commit()
