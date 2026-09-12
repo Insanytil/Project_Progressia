@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     postgres_port: int = 5432
     postgres_user: str
     postgres_password: SecretStr
+    postgres_db: str
 
     model_config = SettingsConfigDict(
         env_file=".env",
