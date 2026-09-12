@@ -1,4 +1,7 @@
+from typing import TYPE_CHECKING
+
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
+from sqlalchemy.orm import Mapped, relationship
 
 from app.db.base import Base
 
@@ -12,5 +15,19 @@ from app.db.base import Base
 # is_superuser      BOOLEAN
 # is_verified       BOOLEAN
 
-class User(SQLAlchemyBaseUserTableUUID, Base):
+if TYPE_CHECKING:
+    from app.models.organization_membership import OrganizationMembership
+
+class User(
+    SQLAlchemyBaseUserTableUUID,
+    Base,
+):
     __tablename__ = "users"
+
+    organization_memberships: Mapped[
+        list["OrganizationMembership"]
+    ] = relationship(
+        back_populates="user",
+        passive_deletes=True,
+        lazy="raise",
+    )
