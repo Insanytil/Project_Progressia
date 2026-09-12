@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
 from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy import Index, func
 
 from app.db.base import Base
 from app.db.base_entity import TimestampMixin
@@ -40,3 +41,8 @@ class User(
         passive_deletes=True,
         lazy="raise",
     )
+Index(
+    "uq_users_email_lower",
+    func.lower(User.email),
+    unique=True,
+)
