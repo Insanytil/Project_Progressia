@@ -16,6 +16,7 @@ from app.db.base import Base, TimestampMixin
 # is_verified       BOOLEAN
 
 if TYPE_CHECKING:
+    from app.models.auth_session import AuthSession
     from app.models.organization_membership import OrganizationMembership
 
 class User(
@@ -28,6 +29,12 @@ class User(
     organization_memberships: Mapped[
         list["OrganizationMembership"]
     ] = relationship(
+        back_populates="user",
+        passive_deletes=True,
+        lazy="raise",
+    )
+
+    sessions: Mapped[list["AuthSession"]] = relationship(
         back_populates="user",
         passive_deletes=True,
         lazy="raise",
