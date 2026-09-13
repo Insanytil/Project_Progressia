@@ -1,7 +1,13 @@
+import re
 import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+SLUG_PATTERN = re.compile(
+    r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
+)
 
 
 class CreateOrganizationRequest(BaseModel):
@@ -13,7 +19,6 @@ class CreateOrganizationRequest(BaseModel):
     slug: str = Field(
         min_length=1,
         max_length=100,
-        pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
     )
 
     @field_validator("name")
@@ -22,7 +27,19 @@ class CreateOrganizationRequest(BaseModel):
         value = value.strip()
 
         if not value:
-            raise ValueError("Organization name cannot be empty")
+            raise ValueError(
+                "Organization name cannot be empty"
+            )
+
+        return value
+
+    @field_validator("slug")
+    @classmethod
+    def validate_slug(cls, value: str) -> str:
+        if not SLUG_PATTERN.fullmatch(value):
+            raise ValueError(
+                "Slug must contain only lowercase letters, numbers and hyphens"
+            )
 
         return value
 
