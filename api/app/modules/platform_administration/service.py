@@ -1,19 +1,20 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.pagination import PagePaginationParams
 from app.models.organization import Organization
 from app.modules.platform_administration.exceptions import (
-    OrganizationSlugAlreadyExistsError,
     OrganizationNameAlreadyExistsError,
+    OrganizationSlugAlreadyExistsError,
 )
-
+from app.modules.platform_administration.filters import OrganizationFilters
 from app.modules.platform_administration.repository import (
     OrganizationRepository,
 )
-
 from app.modules.platform_administration.schemas import (
     CreateOrganizationRequest,
 )
+
 
 class PlatformAdministrationService:
     def __init__(
@@ -25,8 +26,8 @@ class PlatformAdministrationService:
         self.organization_repository = organization_repository
 
     async def create_organization(
-            self,
-            payload: CreateOrganizationRequest,
+        self,
+        payload: CreateOrganizationRequest,
     ) -> Organization:
         existing_name = await self.organization_repository.get_by_name(
             payload.name,
@@ -75,3 +76,20 @@ class PlatformAdministrationService:
 
             raise
 
+    async def get_organizations(
+        self,
+        *,
+        filters: OrganizationFilters,
+        pagination: PagePaginationParams,
+    ) -> tuple[list[Organization], int]:
+        organizations = await self.organization_repository.get_paginated(
+            filters=filters,
+            offset=pagination.offset,
+            limit=pagination.page_size,
+        )
+
+        total = await self.organization_repository.count_filtered(
+            filters,
+        )
+
+        return organizations, total
