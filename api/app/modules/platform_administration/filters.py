@@ -1,5 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.core.pagination import PagePaginationParams
+
 
 class OrganizationFilters(BaseModel):
     model_config = ConfigDict(
@@ -27,3 +29,10 @@ class OrganizationFilters(BaseModel):
         default=None,
         alias="is_active__eq",
     )
+
+
+class OrganizationListParams(
+    OrganizationFilters,
+    PagePaginationParams,
+):
+    pass
