@@ -55,7 +55,12 @@ class PlatformAdministrationService:
         except IntegrityError as exc:
             await self.db.rollback()
 
-            driver_error = exc.orig.__cause__
+            driver_error = getattr(
+                exc.orig,
+                "__cause__",
+                None,
+            ) or exc.orig
+
             constraint_name = getattr(
                 driver_error,
                 "constraint_name",
