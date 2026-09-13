@@ -1,6 +1,19 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.modules.authorisation.dependencies import require_platform_admin
+from app.modules.authorisation.dependencies import (
+    require_platform_admin,
+)
+from app.modules.platform_administration.exceptions import (
+    OrganizationSlugAlreadyExistsError,
+)
+from app.modules.platform_administration.schemas import (
+    CreateOrganizationRequest,
+    OrganizationResponse,
+)
+
+from app.modules.platform_administration.dependencies import (
+    PlatformAdministrationServiceDep,
+)
 
 
 router = APIRouter(
@@ -11,7 +24,7 @@ router = APIRouter(
     ],
 )
 
-@router.get("/organisations")
+@router.get("/organizations")
 
 async def get_paginated_organizations():
     """
@@ -24,16 +37,35 @@ async def get_paginated_organizations():
     except Exception as Ex:
         pass
 
-@router.post("/organizations")
-async def create_organization():
-    """
-    Allows to create an organization (must be Platform Admin)
+@router.post(
+    "/organizations",
+    response_model=OrganizationResponse,
+    status_code=status.HTTP_201_CREATED,
+    )
+async def create_organization(
+        payload: CreateOrganizationRequest,
+        service: PlatformAdministrationServiceDep,
+) -> OrganizationResponse:
+    """ Allows to create an organization
+
+        conditions :
+         - Must be Platform Admin &&  Must have valid CRSF token  as it's POST operation
 
     """
     try:
-        pass
-    except Exception as Ex:
-        pass
+        organization = await service.create_organization(
+            payload,
+        )
+    except OrganizationSlugAlreadyExistsError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Organization slug already exists",
+        ) from None
+
+    return OrganizationResponse.model_validate(
+        organization,
+    )
+
 
 @router.get("/organizations/{organization_id}")
 async def get_organization():
