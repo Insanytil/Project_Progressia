@@ -8,6 +8,7 @@ from app.models.organization import Organization
 from app.modules.platform_administration.exceptions import (
     OrganizationNameAlreadyExistsError,
     OrganizationSlugAlreadyExistsError,
+    OrganizationNotFoundError,
 )
 from app.modules.platform_administration.filters import OrganizationFilters
 from app.modules.platform_administration.repository import (
@@ -101,12 +102,15 @@ class PlatformAdministrationService:
         self,
         *,
         organization_id: uuid.UUID,
-    ) ->  OrganizationResponse :
+    ) ->  Organization :
 
-        organization = await self.organization_repository.get_organization_by_id(
-            organization_id,
+        organization = await self.organization_repository.get_by_id(
+            organization_id = organization_id,
         )
 
-        return organization | None
+        if organization is None:
+            raise OrganizationNotFoundError()
+
+        return organization
 
 

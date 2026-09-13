@@ -110,16 +110,21 @@ async def create_organization(
 async def get_organization(
         organization_id: uuid.UUID,
         service: PlatformAdministrationServiceDep,
-) -> OrganizationResponse | None:
+) -> OrganizationResponse:
     try:
-        organization = service.get_organization_by_id(
+        organization = await service.get_organization_by_id(
             organization_id = organization_id
         )
 
     except OrganizationNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-        )
+            detail="Organization not found",
+        ) from None
+
+    return OrganizationResponse.model_validate(
+        organization,
+    )
     """Return a single organization (must be Platform Admin)."""
 
 
