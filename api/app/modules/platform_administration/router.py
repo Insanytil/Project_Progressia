@@ -5,6 +5,7 @@ from app.modules.authorisation.dependencies import (
 )
 from app.modules.platform_administration.exceptions import (
     OrganizationSlugAlreadyExistsError,
+    OrganizationNameAlreadyExistsError,
 )
 from app.modules.platform_administration.schemas import (
     CreateOrganizationRequest,
@@ -43,13 +44,13 @@ async def get_paginated_organizations():
     status_code=status.HTTP_201_CREATED,
     )
 async def create_organization(
-        payload: CreateOrganizationRequest,
-        service: PlatformAdministrationServiceDep,
+    payload: CreateOrganizationRequest,
+    service: PlatformAdministrationServiceDep,
 ) -> OrganizationResponse:
     """ Allows to create an organization
 
         conditions :
-         - Must be Platform Admin &&  Must have valid CRSF token  as it's POST operation
+         - Must be Platform Admin and must have valid [CRSF token]  as it's POST operation
 
     """
     try:
@@ -60,6 +61,12 @@ async def create_organization(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Organization slug already exists",
+        ) from None
+
+    except OrganizationNameAlreadyExistsError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Organization name already exists",
         ) from None
 
     return OrganizationResponse.model_validate(

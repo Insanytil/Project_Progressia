@@ -18,6 +18,7 @@ async def get_platform_administration_service(
         db=session,
         organization_repository=OrganizationRepository(session),
     )
+
 PlatformAdministrationServiceDep = Annotated[
     PlatformAdministrationService,
     Depends(get_platform_administration_service),

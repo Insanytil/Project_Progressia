@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import String, func, select, type_coerce
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.organization import Organization
@@ -14,6 +14,24 @@ class OrganizationRepository:
 
         return await self.db.scalar(select(Organization).where(Organization.slug == slug,))
 
+    async def get_by_name(
+            self,
+            name: str,
+    ) -> Organization | None:
+        normalized_name = name.strip().lower()
+
+        normalized_name_column = type_coerce(
+            func.lower(
+                func.btrim(Organization.name)
+            ),
+            String,
+        )
+
+        return await self.db.scalar(
+            select(Organization).where(
+                normalized_name_column == normalized_name,
+                )
+        )
     async def create(
         self,
         *,

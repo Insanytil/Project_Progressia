@@ -3,8 +3,10 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Index,
     String,
     UniqueConstraint,
+    func,
     true,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -56,3 +58,9 @@ class Organization(BaseEntity):
         passive_deletes=True,
         lazy="raise",
     )
+
+Index(
+    "uq_organizations_name_normalized",
+    func.lower(func.btrim(Organization.name)),
+    unique=True,
+)
