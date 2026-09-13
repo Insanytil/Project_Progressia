@@ -7,8 +7,8 @@ from app.core.pagination import PagePaginationParams
 from app.models.organization import Organization
 from app.modules.platform_administration.exceptions import (
     OrganizationNameAlreadyExistsError,
-    OrganizationSlugAlreadyExistsError,
     OrganizationNotFoundError,
+    OrganizationSlugAlreadyExistsError,
 )
 from app.modules.platform_administration.filters import OrganizationFilters
 from app.modules.platform_administration.repository import (
@@ -16,7 +16,7 @@ from app.modules.platform_administration.repository import (
 )
 from app.modules.platform_administration.schemas import (
     CreateOrganizationRequest,
-    OrganizationResponse
+    UpdateOrganizationRequest,
 )
 
 
@@ -34,14 +34,14 @@ class PlatformAdministrationService:
         payload: CreateOrganizationRequest,
     ) -> Organization:
         existing_name = await self.organization_repository.get_by_name(
-            payload.name,
+            name=payload.name,
         )
 
         if existing_name is not None:
             raise OrganizationNameAlreadyExistsError()
 
         existing_slug = await self.organization_repository.get_by_slug(
-            payload.slug,
+            slug=payload.slug,
         )
 
         if existing_slug is not None:
@@ -59,25 +59,7 @@ class PlatformAdministrationService:
 
         except IntegrityError as exc:
             await self.db.rollback()
-
-            driver_error = getattr(
-                exc.orig,
-                "__cause__",
-                None,
-            ) or exc.orig
-
-            constraint_name = getattr(
-                driver_error,
-                "constraint_name",
-                None,
-            )
-
-            if constraint_name == "uq_organizations_slug":
-                raise OrganizationSlugAlreadyExistsError() from None
-
-            if constraint_name == "uq_organizations_name_normalized":
-                raise OrganizationNameAlreadyExistsError() from None
-
+            self._raise_organization_integrity_error(exc)
             raise
 
     async def get_organizations(
@@ -102,10 +84,9 @@ class PlatformAdministrationService:
         self,
         *,
         organization_id: uuid.UUID,
-    ) ->  Organization :
-
+    ) -> Organization:
         organization = await self.organization_repository.get_by_id(
-            organization_id = organization_id,
+            organization_id=organization_id,
         )
 
         if organization is None:
@@ -113,4 +94,86 @@ class PlatformAdministrationService:
 
         return organization
 
+    async def update_organization(
+        self,
+        *,
+        organization_id: uuid.UUID,
+        payload: UpdateOrganizationRequest,
+    ) -> Organization:
+        organization = await self.organization_repository.get_by_id(
+            organization_id=organization_id,
+        )
 
+        if organization is None:
+            raise OrganizationNotFoundError()
+
+        updates = payload.model_dump(
+            exclude_unset=True,
+        )
+
+        changes = {
+            field: value
+            for field, value in updates.items()
+            if getattr(organization, field) != value
+        }
+
+        if not changes:
+            return organization
+
+        if "name" in changes:
+            existing_name = await self.organization_repository.get_by_name(
+                name=changes["name"],
+            )
+
+            if (
+                existing_name is not None
+                and existing_name.id != organization.id
+            ):
+                raise OrganizationNameAlreadyExistsError()
+
+        if "slug" in changes:
+            existing_slug = await self.organization_repository.get_by_slug(
+                slug=changes["slug"],
+            )
+
+            if (
+                existing_slug is not None
+                and existing_slug.id != organization.id
+            ):
+                raise OrganizationSlugAlreadyExistsError()
+
+        for field, value in changes.items():
+            setattr(organization, field, value)
+
+        try:
+            await self.db.commit()
+            await self.db.refresh(organization)
+
+            return organization
+
+        except IntegrityError as exc:
+            await self.db.rollback()
+            self._raise_organization_integrity_error(exc)
+            raise
+
+    @staticmethod
+    def _raise_organization_integrity_error(
+        exc: IntegrityError,
+    ) -> None:
+        driver_error = getattr(
+            exc.orig,
+            "__cause__",
+            None,
+        ) or exc.orig
+
+        constraint_name = getattr(
+            driver_error,
+            "constraint_name",
+            None,
+        )
+
+        if constraint_name == "uq_organizations_slug":
+            raise OrganizationSlugAlreadyExistsError() from None
+
+        if constraint_name == "uq_organizations_name_normalized":
+            raise OrganizationNameAlreadyExistsError() from None
