@@ -1,5 +1,6 @@
 from typing import Annotated
 import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.core.pagination import (
@@ -14,8 +15,8 @@ from app.modules.platform_administration.dependencies import (
 )
 from app.modules.platform_administration.exceptions import (
     OrganizationNameAlreadyExistsError,
-    OrganizationSlugAlreadyExistsError,
     OrganizationNotFoundError,
+    OrganizationSlugAlreadyExistsError,
 )
 from app.modules.platform_administration.filters import (
     OrganizationListParams,
@@ -23,6 +24,7 @@ from app.modules.platform_administration.filters import (
 from app.modules.platform_administration.schemas import (
     CreateOrganizationRequest,
     OrganizationResponse,
+    UpdateOrganizationRequest,
 )
 
 
@@ -105,17 +107,17 @@ async def create_organization(
 @router.get(
     "/organizations/{organization_id}",
     response_model=OrganizationResponse,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 async def get_organization(
-        organization_id: uuid.UUID,
-        service: PlatformAdministrationServiceDep,
+    organization_id: uuid.UUID,
+    service: PlatformAdministrationServiceDep,
 ) -> OrganizationResponse:
+    """Return a single organization."""
     try:
         organization = await service.get_organization_by_id(
-            organization_id = organization_id
+            organization_id=organization_id,
         )
-
     except OrganizationNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -125,14 +127,43 @@ async def get_organization(
     return OrganizationResponse.model_validate(
         organization,
     )
-    """Return a single organization (must be Platform Admin)."""
 
 
+@router.patch(
+    "/organizations/{organization_id}",
+    response_model=OrganizationResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def update_organization(
+    organization_id: uuid.UUID,
+    payload: UpdateOrganizationRequest,
+    service: PlatformAdministrationServiceDep,
+) -> OrganizationResponse:
+    """Update only the provided organization fields that actually changed."""
+    try:
+        organization = await service.update_organization(
+            organization_id=organization_id,
+            payload=payload,
+        )
+    except OrganizationNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found",
+        ) from None
+    except OrganizationNameAlreadyExistsError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Organization name already exists",
+        ) from None
+    except OrganizationSlugAlreadyExistsError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Organization slug already exists",
+        ) from None
 
-@router.patch("/organizations/{organization_id}")
-async def update_organization():
-    """Update one organization (must be Platform Admin)."""
-    pass
+    return OrganizationResponse.model_validate(
+        organization,
+    )
 
 
 @router.get("/organizations/{organization_id}/members")
