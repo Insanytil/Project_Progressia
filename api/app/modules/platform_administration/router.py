@@ -1,19 +1,27 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Annotated
 
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from app.core.pagination import (
+    PagePaginatedResponse,
+    PagePaginationMeta,
+)
 from app.modules.authorisation.dependencies import (
     require_platform_admin,
 )
+from app.modules.platform_administration.dependencies import (
+    PlatformAdministrationServiceDep,
+)
 from app.modules.platform_administration.exceptions import (
-    OrganizationSlugAlreadyExistsError,
     OrganizationNameAlreadyExistsError,
+    OrganizationSlugAlreadyExistsError,
+)
+from app.modules.platform_administration.filters import (
+    OrganizationListParams,
 )
 from app.modules.platform_administration.schemas import (
     CreateOrganizationRequest,
     OrganizationResponse,
-)
-
-from app.modules.platform_administration.dependencies import (
-    PlatformAdministrationServiceDep,
 )
 
 
@@ -25,33 +33,53 @@ router = APIRouter(
     ],
 )
 
-@router.get("/organizations")
 
-async def get_paginated_organizations():
-    """
-    Return a paginated list of all organizations ordered by slug asc
-    (must be Platform Admin)
+@router.get(
+    "/organizations",
+    response_model=PagePaginatedResponse[OrganizationResponse],
+)
+async def get_paginated_organizations(
+    params: Annotated[
+        OrganizationListParams,
+        Query(),
+    ],
+    service: PlatformAdministrationServiceDep,
+) -> PagePaginatedResponse[OrganizationResponse]:
+    organizations, total = await service.get_organizations(
+        filters=params,
+        pagination=params,
+    )
 
-    """
-    try:
-        pass
-    except Exception as Ex:
-        pass
+    total_pages = (
+        total + params.page_size - 1
+    ) // params.page_size
+
+    return PagePaginatedResponse(
+        items=[
+            OrganizationResponse.model_validate(organization)
+            for organization in organizations
+        ],
+        pagination=PagePaginationMeta(
+            page=params.page,
+            page_size=params.page_size,
+            total=total,
+            total_pages=total_pages,
+        ),
+    )
+
 
 @router.post(
     "/organizations",
     response_model=OrganizationResponse,
     status_code=status.HTTP_201_CREATED,
-    )
+)
 async def create_organization(
     payload: CreateOrganizationRequest,
     service: PlatformAdministrationServiceDep,
 ) -> OrganizationResponse:
-    """ Allows to create an organization
+    """Create an organization.
 
-        conditions :
-         - Must be Platform Admin and must have valid [CRSF token]  as it's POST operation
-
+    Requires a platform administrator session and a valid CSRF token.
     """
     try:
         organization = await service.create_organization(
@@ -62,7 +90,6 @@ async def create_organization(
             status_code=status.HTTP_409_CONFLICT,
             detail="Organization slug already exists",
         ) from None
-
     except OrganizationNameAlreadyExistsError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -76,53 +103,29 @@ async def create_organization(
 
 @router.get("/organizations/{organization_id}")
 async def get_organization():
-    """
-    Return a single organization (must be Platform Admin)
-    """
-    try:
-        pass
-    except Exception as ex:
-        pass
+    """Return a single organization (must be Platform Admin)."""
+    pass
+
 
 @router.patch("/organizations/{organization_id}")
 async def update_organization():
-    """
-    Update one organization (must be Platform Admin)
-    """
-    try:
-        pass
-    except Exception as Ex:
-        pass
+    """Update one organization (must be Platform Admin)."""
+    pass
+
 
 @router.get("/organizations/{organization_id}/members")
 async def get_paginated_organization_members():
-    """
-    Return a paginated list of organization members (must be Platform Admin)
-    :return:
-    """
-    try:
-        pass
-    except Exception as Ex:
-        pass
+    """Return a paginated list of organization members."""
+    pass
+
 
 @router.post("/organizations/{organization_id}/members")
 async def create_organization_member():
-    """
-    Allows to create an organization member (must be Platform Admin)
-    :return:
-    """
-    try:
-        pass
-    except Exception as Ex:
-        pass
+    """Create an organization member."""
+    pass
+
 
 @router.patch("/organizations/{organization_id}/members/{user_id}")
 async def update_organization_member():
-    """
-    Update one organization member (must be Platform Admin)
-    :return:
-    """
-    try:
-        pass
-    except Exception as Ex:
-        pass
+    """Update one organization member."""
+    pass
