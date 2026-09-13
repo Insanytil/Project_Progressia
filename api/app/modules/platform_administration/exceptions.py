@@ -3,3 +3,6 @@ class OrganizationSlugAlreadyExistsError(Exception):
 
 class OrganizationNameAlreadyExistsError(Exception):
     pass
+
+class OrganizationNotFoundError(Exception):
+    pass

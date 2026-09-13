@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +15,7 @@ from app.modules.platform_administration.repository import (
 )
 from app.modules.platform_administration.schemas import (
     CreateOrganizationRequest,
+    OrganizationResponse
 )
 
 
@@ -93,3 +96,17 @@ class PlatformAdministrationService:
         )
 
         return organizations, total
+
+    async def get_organization_by_id(
+        self,
+        *,
+        organization_id: uuid.UUID,
+    ) ->  OrganizationResponse :
+
+        organization = await self.organization_repository.get_organization_by_id(
+            organization_id,
+        )
+
+        return organization | None
+
+

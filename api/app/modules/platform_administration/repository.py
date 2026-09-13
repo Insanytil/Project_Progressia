@@ -1,3 +1,4 @@
+import uuid
 from typing import Any
 
 from sqlalchemy import String, func, or_, select, type_coerce
@@ -70,6 +71,7 @@ class OrganizationRepository:
 
     async def get_by_slug(
         self,
+        *,
         slug: str,
     ) -> Organization | None:
         return await self.db.scalar(
@@ -80,6 +82,7 @@ class OrganizationRepository:
 
     async def get_by_name(
         self,
+        *,
         name: str,
     ) -> Organization | None:
         normalized_name = name.strip().lower()
@@ -142,3 +145,17 @@ class OrganizationRepository:
         total = await self.db.scalar(statement)
 
         return total or 0
+
+    async def get_by_id(
+        self,
+        *,
+        organization_id: uuid.UUID,
+    ) -> Organization | None:
+
+        return await self.db.scalar(
+            select(Organization)
+                .where(
+                    Organization.id == organization_id,
+                )
+        )
+
