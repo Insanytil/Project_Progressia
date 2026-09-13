@@ -3,7 +3,8 @@ from collections.abc import AsyncGenerator
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, Header, HTTPException, Request, Security, status
+from fastapi.security import APIKeyCookie
 from fastapi_users.db import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +20,12 @@ from app.modules.auth.exceptions import InvalidSessionError
 from app.modules.auth.session_repository import AuthSessionRepository
 from app.modules.auth.user_manager import UserManager
 
+session_cookie_scheme = APIKeyCookie(
+    name=settings.auth_session_cookie_name,
+    scheme_name="SessionCookie",
+    description="Progressia authentication session cookie",
+    auto_error=False,
+)
 
 async def get_user_db(
     session: AsyncSession = Depends(get_async_session),
@@ -55,13 +62,11 @@ async def get_auth_service(
     )
 
 async def get_authenticated_session(
-    request: Request,
+    session_token: str | None = Security(
+        session_cookie_scheme,
+    ),
     auth_service: AuthService = Depends(get_auth_service),
 ) -> AuthenticatedSession:
-    session_token = request.cookies.get(
-        settings.auth_session_cookie_name,
-    )
-
     if session_token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -89,13 +94,13 @@ async def require_csrf(
     authenticated_session: AuthenticatedSession = Depends(
         get_authenticated_session,
     ),
+    csrf_token: str | None = Header(
+        default=None,
+        alias=settings.auth_csrf_header_name,
+    ),
 ) -> AuthenticatedSession:
     if request.method.upper() in SAFE_HTTP_METHODS:
         return authenticated_session
-
-    csrf_token = request.headers.get(
-        settings.auth_csrf_header_name,
-    )
 
     if csrf_token is None or not verify_secret(
         csrf_token,

@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends
-from app.modules.authorisation.dependencies import PlatformAdmin
+
+from app.modules.authorisation.dependencies import require_platform_admin
+
 
 router = APIRouter(
     prefix="/platform",
     tags=["platform"],
     dependencies=[
-        Depends(PlatformAdmin),
+        Depends(require_platform_admin),
     ],
 )
 

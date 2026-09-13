@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends
 from app.modules.auth.router import router as auth_router
-from app.modules.PlatformAdministration.router import router as platformAdministration_router
+from app.modules.platform_administration.router import router as platformAdministration_router
 
 app = FastAPI(
     title="Progressia API",
