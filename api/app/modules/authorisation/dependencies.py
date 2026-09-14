@@ -1,7 +1,16 @@
+import uuid
+from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
+from app.db.session import get_async_session
+from app.models.organization import Organization
+from app.models.organization_membership import OrganizationMembership
+from app.models.organization_role import OrganizationRole
 from app.models.user import User
 from app.modules.auth.dependencies import CsrfProtectedSession
 
@@ -21,4 +30,63 @@ async def require_platform_admin(
 PlatformAdmin = Annotated[
     User,
     Depends(require_platform_admin),
+]
+
+
+@dataclass(frozen=True, slots=True)
+class OrganizationScope:
+    organization: Organization
+    user: User
+    role: OrganizationRole | None
+
+
+async def require_organization_scope(
+    organization_id: uuid.UUID,
+    auth: CsrfProtectedSession,
+    session: AsyncSession = Depends(get_async_session),
+) -> OrganizationScope:
+    organization = await session.scalar(
+        select(Organization).where(
+            Organization.id == organization_id,
+            Organization.is_active.is_(True),
+        )
+    )
+    if organization is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found",
+        )
+
+    if auth.user.is_superuser:
+        return OrganizationScope(
+            organization=organization,
+            user=auth.user,
+            role=None,
+        )
+
+    membership = await session.scalar(
+        select(OrganizationMembership)
+        .options(joinedload(OrganizationMembership.organization))
+        .where(
+            OrganizationMembership.organization_id == organization_id,
+            OrganizationMembership.user_id == auth.user.id,
+            OrganizationMembership.is_active.is_(True),
+        )
+    )
+    if membership is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Active organization membership required",
+        )
+
+    return OrganizationScope(
+        organization=membership.organization,
+        user=auth.user,
+        role=membership.role,
+    )
+
+
+CurrentOrganizationScope = Annotated[
+    OrganizationScope,
+    Depends(require_organization_scope),
 ]

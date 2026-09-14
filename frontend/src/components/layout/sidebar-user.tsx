@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { LoaderCircle, LogOut } from 'lucide-react'
 
@@ -9,14 +8,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import { currentUserQueryOptions, useLogoutMutation } from '@/features/auth'
+import { useLogoutMutation } from '@/features/auth'
+import type { AuthenticatedUser } from '@/features/auth'
 
 function getInitials(email: string) {
   return email.slice(0, 2).toUpperCase()
 }
 
-export function SidebarUser() {
-  const { data: user } = useQuery(currentUserQueryOptions)
+type SidebarUserProps = {
+  user?: AuthenticatedUser
+}
+
+export function SidebarUser({ user }: SidebarUserProps) {
   const logoutMutation = useLogoutMutation()
   const navigate = useNavigate()
 

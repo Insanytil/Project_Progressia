@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { DashboardPage } from '@/pages/dashboard-page'
+import { redirectToAuthenticatedHome } from '@/features/auth'
 
 export const Route = createFileRoute('/_protected/dashboard')({
-  component: DashboardPage,
+  beforeLoad: ({ context }) => redirectToAuthenticatedHome(context.queryClient),
 })

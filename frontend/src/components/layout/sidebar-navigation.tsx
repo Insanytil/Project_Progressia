@@ -1,5 +1,5 @@
 import { Link, useMatchRoute } from '@tanstack/react-router'
-import { LayoutDashboard } from 'lucide-react'
+import { Building2, LayoutDashboard, RefreshCw } from 'lucide-react'
 
 import {
   SidebarGroup,
@@ -10,16 +10,14 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import type { AuthenticatedOrganization, AuthenticatedUser } from '@/features/auth'
 
-const navigationItems = [
-  {
-    label: 'Tableau de bord',
-    to: '/dashboard' as const,
-    icon: LayoutDashboard,
-  },
-]
+type SidebarNavigationProps = {
+  user?: AuthenticatedUser
+  currentOrganization?: AuthenticatedOrganization
+}
 
-export function SidebarNavigation() {
+export function SidebarNavigation({ user, currentOrganization }: SidebarNavigationProps) {
   const matchRoute = useMatchRoute()
   const { setOpenMobile } = useSidebar()
 
@@ -28,19 +26,65 @@ export function SidebarNavigation() {
       <SidebarGroupLabel>Menu</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {navigationItems.map((item) => (
-            <SidebarMenuItem key={item.to}>
+          {user?.is_superuser ? (
+            <SidebarMenuItem>
               <SidebarMenuButton
-                render={<Link to={item.to} onClick={() => setOpenMobile(false)} />}
-                isActive={Boolean(matchRoute({ to: item.to, fuzzy: true }))}
-                tooltip={item.label}
+                render={<Link to="/platformAdministration" onClick={() => setOpenMobile(false)} />}
+                isActive={Boolean(matchRoute({ to: '/platformAdministration', fuzzy: true }))}
+                tooltip="Administration"
                 className="h-10 data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground"
               >
-                <item.icon />
-                <span>{item.label}</span>
+                <Building2 />
+                <span>Administration</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          ))}
+          ) : currentOrganization ? (
+            <>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={(
+                    <Link
+                      to="/organizations/$organizationSlug/dashboard"
+                      params={{ organizationSlug: currentOrganization.slug }}
+                      onClick={() => setOpenMobile(false)}
+                    />
+                  )}
+                  isActive={Boolean(matchRoute({
+                    to: '/organizations/$organizationSlug/dashboard',
+                    params: { organizationSlug: currentOrganization.slug },
+                    fuzzy: true,
+                  }))}
+                  tooltip="Tableau de bord"
+                  className="h-10 data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground"
+                >
+                  <LayoutDashboard />
+                  <span>Tableau de bord</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              {(user?.organizations.length ?? 0) > 1 && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    render={<Link to="/organizations" onClick={() => setOpenMobile(false)} />}
+                    tooltip="Changer d’organisation"
+                  >
+                    <RefreshCw />
+                    <span>Changer d’organisation</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+            </>
+          ) : (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link to="/organizations" onClick={() => setOpenMobile(false)} />}
+                isActive={Boolean(matchRoute({ to: '/organizations', fuzzy: true }))}
+                tooltip="Choisir une organisation"
+              >
+                <Building2 />
+                <span>Choisir une organisation</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

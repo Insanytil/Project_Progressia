@@ -3,3 +3,11 @@ class InvalidCredentialsError(Exception):
 
 class InvalidSessionError(Exception):
     pass
+
+
+class InvalidInvitationError(Exception):
+    pass
+
+
+class InvalidPasswordResetTokenError(Exception):
+    pass

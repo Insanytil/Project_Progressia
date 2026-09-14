@@ -17,6 +17,10 @@ from app.modules.auth.auth_service import (
     AuthenticatedSession,
 )
 from app.modules.auth.exceptions import InvalidSessionError
+from app.modules.auth.invitation_repository import UserInvitationRepository
+from app.modules.auth.invitation_service import InvitationService
+from app.modules.auth.password_reset_repository import PasswordResetTokenRepository
+from app.modules.auth.password_reset_service import PasswordResetService
 from app.modules.auth.session_repository import AuthSessionRepository
 from app.modules.auth.user_manager import UserManager
 
@@ -61,6 +65,41 @@ async def get_auth_service(
         ),
     )
 
+
+async def get_invitation_service(
+    session: AsyncSession = Depends(get_async_session),
+    user_manager: UserManager = Depends(get_user_manager),
+) -> InvitationService:
+    return InvitationService(
+        db=session,
+        repository=UserInvitationRepository(session),
+        user_manager=user_manager,
+    )
+
+
+InvitationServiceDep = Annotated[
+    InvitationService,
+    Depends(get_invitation_service),
+]
+
+
+async def get_password_reset_service(
+    session: AsyncSession = Depends(get_async_session),
+    user_manager: UserManager = Depends(get_user_manager),
+) -> PasswordResetService:
+    return PasswordResetService(
+        db=session,
+        repository=PasswordResetTokenRepository(session),
+        session_repository=AuthSessionRepository(session),
+        user_manager=user_manager,
+    )
+
+
+PasswordResetServiceDep = Annotated[
+    PasswordResetService,
+    Depends(get_password_reset_service),
+]
+
 async def get_authenticated_session(
     session_token: str | None = Security(
         session_cookie_scheme,
@@ -71,7 +110,7 @@ async def get_authenticated_session(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
-        )
+    )
 
     try:
         return await auth_service.authenticate_session(

@@ -1,12 +1,13 @@
 import uuid
 from typing import Any
 
-from sqlalchemy import String, func, or_, select, type_coerce
+from sqlalchemy import String, exists, func, or_, select, type_coerce
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
 
 from app.core.filtering import apply_eq_filter
 from app.models.organization import Organization
+from app.models.organization_membership import OrganizationMembership
 from app.modules.platform_administration.filters import OrganizationFilters
 
 
@@ -158,4 +159,26 @@ class OrganizationRepository:
                     Organization.id == organization_id,
                 )
         )
+
+    async def delete(
+        self,
+        *,
+        organization: Organization,
+    ) -> None:
+        await self.db.delete(organization)
+
+    async def has_members(
+        self,
+        *,
+        organization_id: uuid.UUID,
+    ) -> bool:
+        result = await self.db.scalar(
+            select(
+                exists().where(
+                    OrganizationMembership.organization_id == organization_id,
+                )
+            )
+        )
+
+        return bool(result)
 

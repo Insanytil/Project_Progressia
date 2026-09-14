@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.models.auth_session import AuthSession
+from app.models.organization_membership import OrganizationMembership
+from app.models.user import User
 
 
 class AuthSessionRepository:
@@ -45,7 +47,9 @@ class AuthSessionRepository:
         statement = (
             select(AuthSession)
             .options(
-                joinedload(AuthSession.user),
+                joinedload(AuthSession.user)
+                .selectinload(User.organization_memberships)
+                .joinedload(OrganizationMembership.organization),
             )
             .where(
                 AuthSession.token_hash == token_hash,

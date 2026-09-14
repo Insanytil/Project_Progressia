@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import { getCurrentUser, login, logout } from '../api/auth-api'
+import { acceptInvitation, getCurrentUser, login, logout } from '../api/auth-api'
 import { isUnauthorizedError } from '../api/auth-errors'
 import { authQueryKeys } from '../queries/auth-queries'
 
@@ -34,4 +34,8 @@ export function useLogoutMutation() {
       queryClient.removeQueries({ queryKey: authQueryKeys.all })
     },
   })
+}
+
+export function useAcceptInvitationMutation() {
+  return useMutation({ mutationFn: acceptInvitation })
 }

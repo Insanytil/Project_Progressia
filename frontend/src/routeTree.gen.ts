@@ -12,9 +12,18 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as GuestRouteImport } from './routes/_guest'
 import { Route as NeutralRouteImport } from './routes/_neutral'
 import { Route as ProtectedRouteImport } from './routes/_protected'
+import { Route as GuestActivateRouteImport } from './routes/_guest/activate'
 import { Route as GuestLoginRouteImport } from './routes/_guest/login'
 import { Route as NeutralIndexRouteImport } from './routes/_neutral/index'
+import { Route as NeutralResetPasswordRouteImport } from './routes/_neutral/reset-password'
+import { Route as ProtectedSuperuserRouteImport } from './routes/_protected/_superuser'
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
+import { Route as ProtectedOrganizationsRouteImport } from './routes/_protected/organizations'
+import { Route as ProtectedSuperuserPlatformAdministrationRouteImport } from './routes/_protected/_superuser/platformAdministration'
+import { Route as ProtectedOrganizationsIndexRouteImport } from './routes/_protected/organizations/index'
+import { Route as ProtectedOrganizationsOrganizationSlugRouteImport } from './routes/_protected/organizations/$organizationSlug'
+import { Route as ProtectedOrganizationsOrganizationSlugIndexRouteImport } from './routes/_protected/organizations/$organizationSlug/index'
+import { Route as ProtectedOrganizationsOrganizationSlugDashboardRouteImport } from './routes/_protected/organizations/$organizationSlug/dashboard'
 
 const GuestRoute = GuestRouteImport.update({
   id: '/_guest',
@@ -28,6 +37,11 @@ const ProtectedRoute = ProtectedRouteImport.update({
   id: '/_protected',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuestActivateRoute = GuestActivateRouteImport.update({
+  id: '/activate',
+  path: '/activate',
+  getParentRoute: () => GuestRoute,
+} as any)
 const GuestLoginRoute = GuestLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -38,44 +52,140 @@ const NeutralIndexRoute = NeutralIndexRouteImport.update({
   path: '/',
   getParentRoute: () => NeutralRoute,
 } as any)
+const NeutralResetPasswordRoute = NeutralResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => NeutralRoute,
+} as any)
+const ProtectedSuperuserRoute = ProtectedSuperuserRouteImport.update({
+  id: '/_superuser',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ProtectedDashboardRoute = ProtectedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedOrganizationsRoute = ProtectedOrganizationsRouteImport.update({
+  id: '/organizations',
+  path: '/organizations',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedSuperuserPlatformAdministrationRoute =
+  ProtectedSuperuserPlatformAdministrationRouteImport.update({
+    id: '/platformAdministration',
+    path: '/platformAdministration',
+    getParentRoute: () => ProtectedSuperuserRoute,
+  } as any)
+const ProtectedOrganizationsIndexRoute =
+  ProtectedOrganizationsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ProtectedOrganizationsRoute,
+  } as any)
+const ProtectedOrganizationsOrganizationSlugRoute =
+  ProtectedOrganizationsOrganizationSlugRouteImport.update({
+    id: '/$organizationSlug',
+    path: '/$organizationSlug',
+    getParentRoute: () => ProtectedOrganizationsRoute,
+  } as any)
+const ProtectedOrganizationsOrganizationSlugIndexRoute =
+  ProtectedOrganizationsOrganizationSlugIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ProtectedOrganizationsOrganizationSlugRoute,
+  } as any)
+const ProtectedOrganizationsOrganizationSlugDashboardRoute =
+  ProtectedOrganizationsOrganizationSlugDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => ProtectedOrganizationsOrganizationSlugRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof NeutralIndexRoute
+  '/activate': typeof GuestActivateRoute
   '/login': typeof GuestLoginRoute
+  '/reset-password': typeof NeutralResetPasswordRoute
   '/dashboard': typeof ProtectedDashboardRoute
+  '/organizations': typeof ProtectedOrganizationsRouteWithChildren
+  '/platformAdministration': typeof ProtectedSuperuserPlatformAdministrationRoute
+  '/organizations/$organizationSlug': typeof ProtectedOrganizationsOrganizationSlugRouteWithChildren
+  '/organizations/': typeof ProtectedOrganizationsIndexRoute
+  '/organizations/$organizationSlug/dashboard': typeof ProtectedOrganizationsOrganizationSlugDashboardRoute
+  '/organizations/$organizationSlug/': typeof ProtectedOrganizationsOrganizationSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof NeutralIndexRoute
+  '/activate': typeof GuestActivateRoute
   '/login': typeof GuestLoginRoute
+  '/reset-password': typeof NeutralResetPasswordRoute
   '/dashboard': typeof ProtectedDashboardRoute
+  '/platformAdministration': typeof ProtectedSuperuserPlatformAdministrationRoute
+  '/organizations': typeof ProtectedOrganizationsIndexRoute
+  '/organizations/$organizationSlug/dashboard': typeof ProtectedOrganizationsOrganizationSlugDashboardRoute
+  '/organizations/$organizationSlug': typeof ProtectedOrganizationsOrganizationSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_guest': typeof GuestRouteWithChildren
   '/_neutral': typeof NeutralRouteWithChildren
   '/_protected': typeof ProtectedRouteWithChildren
+  '/_guest/activate': typeof GuestActivateRoute
   '/_guest/login': typeof GuestLoginRoute
+  '/_neutral/reset-password': typeof NeutralResetPasswordRoute
+  '/_protected/_superuser': typeof ProtectedSuperuserRouteWithChildren
   '/_protected/dashboard': typeof ProtectedDashboardRoute
+  '/_protected/organizations': typeof ProtectedOrganizationsRouteWithChildren
   '/_neutral/': typeof NeutralIndexRoute
+  '/_protected/_superuser/platformAdministration': typeof ProtectedSuperuserPlatformAdministrationRoute
+  '/_protected/organizations/$organizationSlug': typeof ProtectedOrganizationsOrganizationSlugRouteWithChildren
+  '/_protected/organizations/': typeof ProtectedOrganizationsIndexRoute
+  '/_protected/organizations/$organizationSlug/dashboard': typeof ProtectedOrganizationsOrganizationSlugDashboardRoute
+  '/_protected/organizations/$organizationSlug/': typeof ProtectedOrganizationsOrganizationSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/dashboard'
+  fullPaths:
+    | '/'
+    | '/activate'
+    | '/login'
+    | '/reset-password'
+    | '/dashboard'
+    | '/organizations'
+    | '/platformAdministration'
+    | '/organizations/$organizationSlug'
+    | '/organizations/'
+    | '/organizations/$organizationSlug/dashboard'
+    | '/organizations/$organizationSlug/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/dashboard'
+  to:
+    | '/'
+    | '/activate'
+    | '/login'
+    | '/reset-password'
+    | '/dashboard'
+    | '/platformAdministration'
+    | '/organizations'
+    | '/organizations/$organizationSlug/dashboard'
+    | '/organizations/$organizationSlug'
   id:
     | '__root__'
     | '/_guest'
     | '/_neutral'
     | '/_protected'
+    | '/_guest/activate'
     | '/_guest/login'
+    | '/_neutral/reset-password'
+    | '/_protected/_superuser'
     | '/_protected/dashboard'
+    | '/_protected/organizations'
     | '/_neutral/'
+    | '/_protected/_superuser/platformAdministration'
+    | '/_protected/organizations/$organizationSlug'
+    | '/_protected/organizations/'
+    | '/_protected/organizations/$organizationSlug/dashboard'
+    | '/_protected/organizations/$organizationSlug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -107,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_guest/activate': {
+      id: '/_guest/activate'
+      path: '/activate'
+      fullPath: '/activate'
+      preLoaderRoute: typeof GuestActivateRouteImport
+      parentRoute: typeof GuestRoute
+    }
     '/_guest/login': {
       id: '/_guest/login'
       path: '/login'
@@ -121,6 +238,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NeutralIndexRouteImport
       parentRoute: typeof NeutralRoute
     }
+    '/_neutral/reset-password': {
+      id: '/_neutral/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof NeutralResetPasswordRouteImport
+      parentRoute: typeof NeutralRoute
+    }
+    '/_protected/_superuser': {
+      id: '/_protected/_superuser'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ProtectedSuperuserRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/dashboard': {
       id: '/_protected/dashboard'
       path: '/dashboard'
@@ -128,36 +259,133 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedDashboardRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/organizations': {
+      id: '/_protected/organizations'
+      path: '/organizations'
+      fullPath: '/organizations'
+      preLoaderRoute: typeof ProtectedOrganizationsRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/_superuser/platformAdministration': {
+      id: '/_protected/_superuser/platformAdministration'
+      path: '/platformAdministration'
+      fullPath: '/platformAdministration'
+      preLoaderRoute: typeof ProtectedSuperuserPlatformAdministrationRouteImport
+      parentRoute: typeof ProtectedSuperuserRoute
+    }
+    '/_protected/organizations/': {
+      id: '/_protected/organizations/'
+      path: '/'
+      fullPath: '/organizations/'
+      preLoaderRoute: typeof ProtectedOrganizationsIndexRouteImport
+      parentRoute: typeof ProtectedOrganizationsRoute
+    }
+    '/_protected/organizations/$organizationSlug': {
+      id: '/_protected/organizations/$organizationSlug'
+      path: '/$organizationSlug'
+      fullPath: '/organizations/$organizationSlug'
+      preLoaderRoute: typeof ProtectedOrganizationsOrganizationSlugRouteImport
+      parentRoute: typeof ProtectedOrganizationsRoute
+    }
+    '/_protected/organizations/$organizationSlug/': {
+      id: '/_protected/organizations/$organizationSlug/'
+      path: '/'
+      fullPath: '/organizations/$organizationSlug/'
+      preLoaderRoute: typeof ProtectedOrganizationsOrganizationSlugIndexRouteImport
+      parentRoute: typeof ProtectedOrganizationsOrganizationSlugRoute
+    }
+    '/_protected/organizations/$organizationSlug/dashboard': {
+      id: '/_protected/organizations/$organizationSlug/dashboard'
+      path: '/dashboard'
+      fullPath: '/organizations/$organizationSlug/dashboard'
+      preLoaderRoute: typeof ProtectedOrganizationsOrganizationSlugDashboardRouteImport
+      parentRoute: typeof ProtectedOrganizationsOrganizationSlugRoute
+    }
   }
 }
 
 interface GuestRouteChildren {
+  GuestActivateRoute: typeof GuestActivateRoute
   GuestLoginRoute: typeof GuestLoginRoute
 }
 
 const GuestRouteChildren: GuestRouteChildren = {
+  GuestActivateRoute: GuestActivateRoute,
   GuestLoginRoute: GuestLoginRoute,
 }
 
 const GuestRouteWithChildren = GuestRoute._addFileChildren(GuestRouteChildren)
 
 interface NeutralRouteChildren {
+  NeutralResetPasswordRoute: typeof NeutralResetPasswordRoute
   NeutralIndexRoute: typeof NeutralIndexRoute
 }
 
 const NeutralRouteChildren: NeutralRouteChildren = {
+  NeutralResetPasswordRoute: NeutralResetPasswordRoute,
   NeutralIndexRoute: NeutralIndexRoute,
 }
 
 const NeutralRouteWithChildren =
   NeutralRoute._addFileChildren(NeutralRouteChildren)
 
+interface ProtectedSuperuserRouteChildren {
+  ProtectedSuperuserPlatformAdministrationRoute: typeof ProtectedSuperuserPlatformAdministrationRoute
+}
+
+const ProtectedSuperuserRouteChildren: ProtectedSuperuserRouteChildren = {
+  ProtectedSuperuserPlatformAdministrationRoute:
+    ProtectedSuperuserPlatformAdministrationRoute,
+}
+
+const ProtectedSuperuserRouteWithChildren =
+  ProtectedSuperuserRoute._addFileChildren(ProtectedSuperuserRouteChildren)
+
+interface ProtectedOrganizationsOrganizationSlugRouteChildren {
+  ProtectedOrganizationsOrganizationSlugDashboardRoute: typeof ProtectedOrganizationsOrganizationSlugDashboardRoute
+  ProtectedOrganizationsOrganizationSlugIndexRoute: typeof ProtectedOrganizationsOrganizationSlugIndexRoute
+}
+
+const ProtectedOrganizationsOrganizationSlugRouteChildren: ProtectedOrganizationsOrganizationSlugRouteChildren =
+  {
+    ProtectedOrganizationsOrganizationSlugDashboardRoute:
+      ProtectedOrganizationsOrganizationSlugDashboardRoute,
+    ProtectedOrganizationsOrganizationSlugIndexRoute:
+      ProtectedOrganizationsOrganizationSlugIndexRoute,
+  }
+
+const ProtectedOrganizationsOrganizationSlugRouteWithChildren =
+  ProtectedOrganizationsOrganizationSlugRoute._addFileChildren(
+    ProtectedOrganizationsOrganizationSlugRouteChildren,
+  )
+
+interface ProtectedOrganizationsRouteChildren {
+  ProtectedOrganizationsOrganizationSlugRoute: typeof ProtectedOrganizationsOrganizationSlugRouteWithChildren
+  ProtectedOrganizationsIndexRoute: typeof ProtectedOrganizationsIndexRoute
+}
+
+const ProtectedOrganizationsRouteChildren: ProtectedOrganizationsRouteChildren =
+  {
+    ProtectedOrganizationsOrganizationSlugRoute:
+      ProtectedOrganizationsOrganizationSlugRouteWithChildren,
+    ProtectedOrganizationsIndexRoute: ProtectedOrganizationsIndexRoute,
+  }
+
+const ProtectedOrganizationsRouteWithChildren =
+  ProtectedOrganizationsRoute._addFileChildren(
+    ProtectedOrganizationsRouteChildren,
+  )
+
 interface ProtectedRouteChildren {
+  ProtectedSuperuserRoute: typeof ProtectedSuperuserRouteWithChildren
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
+  ProtectedOrganizationsRoute: typeof ProtectedOrganizationsRouteWithChildren
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
+  ProtectedSuperuserRoute: ProtectedSuperuserRouteWithChildren,
   ProtectedDashboardRoute: ProtectedDashboardRoute,
+  ProtectedOrganizationsRoute: ProtectedOrganizationsRouteWithChildren,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(

@@ -46,7 +46,7 @@ class OrganizationMembership(BaseEntity):
     organization_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey(
             "organizations.id",
-            ondelete="CASCADE",
+            ondelete="RESTRICT",
         ),
         nullable=False,
     )

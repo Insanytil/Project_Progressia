@@ -4,6 +4,10 @@ export function isUnauthorizedError(error: unknown): boolean {
   return axios.isAxiosError(error) && error.response?.status === 401
 }
 
+export function isNotFoundError(error: unknown): boolean {
+  return axios.isAxiosError(error) && error.response?.status === 404
+}
+
 export function getLoginErrorMessage(error: unknown): string {
   if (isUnauthorizedError(error)) {
     return 'Adresse e-mail ou mot de passe incorrect.'

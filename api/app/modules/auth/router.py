@@ -7,6 +7,7 @@ from fastapi import (
     Response,
     status,
 )
+from fastapi_users import exceptions as user_exceptions
 
 from app.modules.auth.auth_service import AuthService
 from app.modules.auth.cookies import (
@@ -16,12 +17,23 @@ from app.modules.auth.cookies import (
 from app.modules.auth.dependencies import (
     CsrfProtectedSession,
     CurrentUser,
+    InvitationServiceDep,
+    PasswordResetServiceDep,
     get_auth_service,
 )
-from app.modules.auth.exceptions import InvalidCredentialsError
+from app.modules.auth.exceptions import (
+    InvalidCredentialsError,
+    InvalidInvitationError,
+    InvalidPasswordResetTokenError,
+)
 from app.modules.auth.schemas import (
+    AcceptInvitationRequest,
+    AcceptPasswordResetRequest,
+    CurrentOrganizationResponse,
     CurrentUserResponse,
+    InvitationResponse,
     LoginRequest,
+    PasswordResetResponse,
 )
 
 
@@ -94,4 +106,113 @@ async def logout_all(
 async def get_me(
     user: CurrentUser,
 ) -> CurrentUserResponse:
-    return CurrentUserResponse.model_validate(user)
+    organizations = [
+        CurrentOrganizationResponse(
+            id=membership.organization.id,
+            name=membership.organization.name,
+            slug=membership.organization.slug,
+            role=membership.role,
+        )
+        for membership in sorted(
+            user.organization_memberships,
+            key=lambda item: item.organization.name.casefold(),
+        )
+        if membership.is_active and membership.organization.is_active
+    ]
+    return CurrentUserResponse(
+        id=user.id,
+        email=user.email,
+        is_superuser=user.is_superuser,
+        is_verified=user.is_verified,
+        organizations=organizations,
+    )
+
+
+@router.get(
+    "/invitations/{token}",
+    response_model=InvitationResponse,
+)
+async def get_invitation(
+    token: str,
+    service: InvitationServiceDep,
+) -> InvitationResponse:
+    try:
+        invitation = await service.get_valid_invitation(token=token)
+    except InvalidInvitationError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invitation is invalid or expired",
+        ) from None
+    return InvitationResponse(
+        email=invitation.user.email,
+        expires_at=invitation.expires_at,
+    )
+
+
+@router.post(
+    "/invitations/accept",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def accept_invitation(
+    payload: AcceptInvitationRequest,
+    service: InvitationServiceDep,
+) -> None:
+    try:
+        await service.accept(
+            token=payload.token,
+            password=payload.password,
+        )
+    except InvalidInvitationError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invitation is invalid or expired",
+        ) from None
+    except user_exceptions.InvalidPasswordException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=exc.reason,
+        ) from None
+
+
+@router.get(
+    "/password-resets/{token}",
+    response_model=PasswordResetResponse,
+)
+async def get_password_reset(
+    token: str,
+    service: PasswordResetServiceDep,
+) -> PasswordResetResponse:
+    try:
+        reset_token = await service.get_valid_token(token=token)
+    except InvalidPasswordResetTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Password reset link is invalid or expired",
+        ) from None
+
+    return PasswordResetResponse(
+        email=reset_token.user.email,
+        expires_at=reset_token.expires_at,
+    )
+
+
+@router.post(
+    "/password-resets/accept",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def accept_password_reset(
+    payload: AcceptPasswordResetRequest,
+    service: PasswordResetServiceDep,
+) -> None:
+    try:
+        await service.accept(token=payload.token, password=payload.password)
+    except InvalidPasswordResetTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Password reset link is invalid or expired",
+        ) from None
+    except user_exceptions.InvalidPasswordException as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=exc.reason,
+        ) from None

@@ -1,11 +1,12 @@
 import uuid
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PagePaginationParams
 from app.models.organization import Organization
 from app.modules.platform_administration.exceptions import (
+    OrganizationHasMembersError,
     OrganizationNameAlreadyExistsError,
     OrganizationNotFoundError,
     OrganizationSlugAlreadyExistsError,
@@ -154,6 +155,47 @@ class PlatformAdministrationService:
         except IntegrityError as exc:
             await self.db.rollback()
             self._raise_organization_integrity_error(exc)
+            raise
+
+    async def delete_organization(
+        self,
+        *,
+        organization_id: uuid.UUID,
+    ) -> None:
+        organization = await self.organization_repository.get_by_id(
+            organization_id=organization_id,
+        )
+
+        if organization is None:
+            raise OrganizationNotFoundError()
+
+        if await self.organization_repository.has_members(
+            organization_id=organization_id,
+        ):
+            raise OrganizationHasMembersError()
+
+        try:
+            await self.organization_repository.delete(
+                organization=organization,
+            )
+            await self.db.commit()
+        except IntegrityError as exc:
+            await self.db.rollback()
+
+            driver_error = getattr(
+                exc.orig,
+                "__cause__",
+                None,
+            ) or exc.orig
+
+            if getattr(driver_error, "constraint_name", None) == (
+                "fk_organization_memberships_organization_id_organizations"
+            ):
+                raise OrganizationHasMembersError() from None
+
+            raise
+        except SQLAlchemyError:
+            await self.db.rollback()
             raise
 
     @staticmethod

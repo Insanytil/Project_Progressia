@@ -22,6 +22,14 @@ class Settings(BaseSettings):
 
     auth_cookie_secure: bool = False
 
+    invitation_lifetime_hours: PositiveInt = 48
+    password_reset_lifetime_minutes: PositiveInt = 60
+    frontend_base_url: str = "http://localhost:5173"
+
+    smtp_host: str = "127.0.0.1"
+    smtp_port: int = 1025
+    smtp_sender_email: str = "no-reply@progressia.local"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

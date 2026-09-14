@@ -57,7 +57,7 @@ class AuthService:
             password=password,
         )
 
-        if user is None or not user.is_active:
+        if user is None or not user.is_active or not user.is_verified:
             raise InvalidCredentialsError()
 
         session_token = generate_secret()

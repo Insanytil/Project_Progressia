@@ -3,16 +3,33 @@ import { redirect } from '@tanstack/react-router'
 
 import { isUnauthorizedError } from '../api/auth-errors'
 import { currentUserQueryOptions } from '../queries/auth-queries'
+import type { AuthenticatedOrganization, AuthenticatedUser } from '../model/auth.types'
+
+function redirectToUserHome(user: AuthenticatedUser): never {
+  if (user.is_superuser) {
+    throw redirect({ to: '/platformAdministration' })
+  }
+
+  if (user.organizations.length === 1) {
+    throw redirect({
+      to: '/organizations/$organizationSlug/dashboard',
+      params: { organizationSlug: user.organizations[0].slug },
+    })
+  }
+
+  throw redirect({ to: '/organizations' })
+}
 
 export async function requireGuest(queryClient: QueryClient) {
+  let user: AuthenticatedUser
   try {
-    await queryClient.ensureQueryData(currentUserQueryOptions)
+    user = await queryClient.ensureQueryData(currentUserQueryOptions)
   } catch {
     // The login screen must stay reachable when the session check is unavailable.
     return
   }
 
-  throw redirect({ to: '/dashboard' })
+  redirectToUserHome(user)
 }
 
 export async function requireAuthentication(queryClient: QueryClient) {
@@ -25,4 +42,44 @@ export async function requireAuthentication(queryClient: QueryClient) {
 
     throw error
   }
+}
+
+export async function requireSuperuser(queryClient: QueryClient) {
+  const user = await queryClient.ensureQueryData(currentUserQueryOptions)
+
+  if (!user.is_superuser) {
+    throw redirect({ to: '/dashboard' })
+  }
+}
+
+export async function redirectToAuthenticatedHome(queryClient: QueryClient): Promise<never> {
+  const user = await queryClient.ensureQueryData(currentUserQueryOptions)
+  return redirectToUserHome(user)
+}
+
+export async function requireOrganizationUser(queryClient: QueryClient): Promise<void> {
+  const user = await queryClient.ensureQueryData(currentUserQueryOptions)
+  if (user.is_superuser) {
+    throw redirect({ to: '/platformAdministration' })
+  }
+}
+
+export async function requireOrganizationScope(
+  queryClient: QueryClient,
+  organizationSlug: string,
+): Promise<AuthenticatedOrganization> {
+  const user = await queryClient.ensureQueryData(currentUserQueryOptions)
+
+  if (user.is_superuser) {
+    throw redirect({ to: '/platformAdministration' })
+  }
+
+  const organization = user.organizations.find(
+    (candidate) => candidate.slug === organizationSlug,
+  )
+  if (!organization) {
+    throw redirect({ to: '/organizations' })
+  }
+
+  return organization
 }

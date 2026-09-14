@@ -4,6 +4,8 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 
+import { Toaster } from '@/components/ui/sonner'
+
 import type { QueryClient } from '@tanstack/react-query'
 
 export interface RouterContext {
@@ -18,6 +20,7 @@ function RootComponent() {
   return (
     <>
       <Outlet />
+      <Toaster position="top-right" richColors />
 
       {import.meta.env.DEV && (
         <TanStackRouterDevtools position="bottom-right" />
