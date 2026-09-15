@@ -11,3 +11,7 @@ class InvalidInvitationError(Exception):
 
 class InvalidPasswordResetTokenError(Exception):
     pass
+
+
+class InvalidDefaultOrganizationError(Exception):
+    pass

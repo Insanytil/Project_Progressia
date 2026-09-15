@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -41,7 +41,10 @@ class OrganizationScope:
 
 
 async def require_organization_scope(
-    organization_id: uuid.UUID,
+    organization_id: Annotated[
+        uuid.UUID,
+        Header(alias="X-Organization-ID"),
+    ],
     auth: CsrfProtectedSession,
     session: AsyncSession = Depends(get_async_session),
 ) -> OrganizationScope:
@@ -89,4 +92,21 @@ async def require_organization_scope(
 CurrentOrganizationScope = Annotated[
     OrganizationScope,
     Depends(require_organization_scope),
+]
+
+
+async def require_organization_admin(
+    scope: CurrentOrganizationScope,
+) -> OrganizationScope:
+    if scope.role != OrganizationRole.ORGANIZATION_ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Organization administrator access required",
+        )
+    return scope
+
+
+OrganizationAdminScope = Annotated[
+    OrganizationScope,
+    Depends(require_organization_admin),
 ]

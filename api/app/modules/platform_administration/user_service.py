@@ -1,17 +1,14 @@
 import uuid
-from collections.abc import Awaitable, Callable
-from datetime import timedelta
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.email import SmtpEmailSender
-from app.core.security import generate_secret, hash_secret, session_expiry
+from app.core.security import generate_secret
+from app.models.background_job import BackgroundJobType
 from app.models.organization_role import OrganizationRole
 from app.models.user import User
-from app.modules.auth.invitation_repository import UserInvitationRepository
-from app.modules.auth.password_reset_repository import PasswordResetTokenRepository
 from app.modules.auth.user_manager import UserManager
+from app.modules.jobs.service import BackgroundJobService
 from app.modules.platform_administration.exceptions import (
     OrganizationNotFoundError,
     OrganizationMembershipAlreadyExistsError,
@@ -38,26 +35,19 @@ class PlatformUserAdministrationService:
         db: AsyncSession,
         user_repository: PlatformUserRepository,
         organization_repository: OrganizationRepository,
-        invitation_repository: UserInvitationRepository,
-        password_reset_repository: PasswordResetTokenRepository,
+        job_service: BackgroundJobService,
         user_manager: UserManager,
-        email_sender: SmtpEmailSender,
-        invitation_lifetime: timedelta,
-        password_reset_lifetime: timedelta,
     ):
         self.db = db
         self.user_repository = user_repository
         self.organization_repository = organization_repository
-        self.invitation_repository = invitation_repository
-        self.password_reset_repository = password_reset_repository
+        self.job_service = job_service
         self.user_manager = user_manager
-        self.email_sender = email_sender
-        self.invitation_lifetime = invitation_lifetime
-        self.password_reset_lifetime = password_reset_lifetime
 
     async def create_user(
         self,
         payload: CreatePlatformUserRequest,
+        triggered_by_user_id: uuid.UUID,
     ) -> tuple[User, bool]:
         if await self.user_repository.get_by_email(email=payload.email):
             raise UserEmailAlreadyExistsError()
@@ -69,7 +59,6 @@ class PlatformUserAdministrationService:
             if organization is None:
                 raise OrganizationNotFoundError()
 
-        invitation_token = generate_secret()
         placeholder_password = generate_secret()
 
         try:
@@ -87,11 +76,14 @@ class PlatformUserAdministrationService:
                     role=payload.role,
                 )
 
-            await self.invitation_repository.create(
-                user_id=user.id,
-                token_hash=hash_secret(invitation_token),
-                expires_at=session_expiry(self.invitation_lifetime),
+            job = self.job_service.create_email_job(
+                job_type=BackgroundJobType.ACCOUNT_VERIFICATION_EMAIL,
+                recipient_email=user.email,
+                subject_user_id=user.id,
+                organization_id=payload.organization_id,
+                triggered_by_user_id=triggered_by_user_id,
             )
+            await self.db.flush()
             await self.db.commit()
         except IntegrityError as exc:
             await self.db.rollback()
@@ -102,16 +94,9 @@ class PlatformUserAdministrationService:
         user = await self.user_repository.get_by_id_with_memberships(
             user_id=user.id,
         )
-        invitation_sent = True
-        try:
-            await self.email_sender.send_account_invitation(
-                recipient_email=user.email,
-                token=invitation_token,
-            )
-        except OSError:
-            invitation_sent = False
+        invitation_queued = await self.job_service.dispatch(job)
 
-        return user, invitation_sent
+        return user, invitation_queued
 
     async def get_users(
         self,
@@ -146,7 +131,8 @@ class PlatformUserAdministrationService:
         *,
         user_id: uuid.UUID,
         organization_id: uuid.UUID,
-        is_active: bool,
+        is_active: bool | None,
+        role: OrganizationRole | None,
     ) -> None:
         if await self.user_repository.get_managed_by_id(user_id=user_id) is None:
             raise PlatformUserNotFoundError()
@@ -156,7 +142,10 @@ class PlatformUserAdministrationService:
         )
         if membership is None:
             raise OrganizationMembershipNotFoundError()
-        membership.is_active = is_active
+        if is_active is not None:
+            membership.is_active = is_active
+        if role is not None:
+            membership.role = role
         await self.db.commit()
 
     async def add_to_organization(
@@ -189,41 +178,47 @@ class PlatformUserAdministrationService:
             await self.db.rollback()
             raise OrganizationMembershipAlreadyExistsError() from None
 
-    async def resend_verification_email(self, *, user_id: uuid.UUID) -> bool:
+    async def resend_verification_email(
+        self,
+        *,
+        user_id: uuid.UUID,
+        triggered_by_user_id: uuid.UUID,
+    ) -> bool:
         user = await self._get_managed_user(user_id=user_id, for_update=True)
         if user.is_verified:
             raise UserAlreadyVerifiedError()
 
-        token = generate_secret()
-        await self.invitation_repository.replace_for_user(
-            user_id=user.id,
-            token_hash=hash_secret(token),
-            expires_at=session_expiry(self.invitation_lifetime),
-        )
-        await self.db.commit()
-        return await self._send_email(
-            self.email_sender.send_account_invitation,
+        job = self.job_service.create_email_job(
+            job_type=BackgroundJobType.ACCOUNT_VERIFICATION_EMAIL,
             recipient_email=user.email,
-            token=token,
+            subject_user_id=user.id,
+            organization_id=None,
+            triggered_by_user_id=triggered_by_user_id,
         )
+        await self.db.flush()
+        await self.db.commit()
+        return await self.job_service.dispatch(job)
 
-    async def send_password_reset_email(self, *, user_id: uuid.UUID) -> bool:
+    async def send_password_reset_email(
+        self,
+        *,
+        user_id: uuid.UUID,
+        triggered_by_user_id: uuid.UUID,
+    ) -> bool:
         user = await self._get_managed_user(user_id=user_id, for_update=True)
         if not user.is_verified:
             raise UserNotVerifiedError()
 
-        token = generate_secret()
-        await self.password_reset_repository.create_or_replace(
-            user_id=user.id,
-            token_hash=hash_secret(token),
-            expires_at=session_expiry(self.password_reset_lifetime),
-        )
-        await self.db.commit()
-        return await self._send_email(
-            self.email_sender.send_password_reset,
+        job = self.job_service.create_email_job(
+            job_type=BackgroundJobType.PASSWORD_RESET_EMAIL,
             recipient_email=user.email,
-            token=token,
+            subject_user_id=user.id,
+            organization_id=None,
+            triggered_by_user_id=triggered_by_user_id,
         )
+        await self.db.flush()
+        await self.db.commit()
+        return await self.job_service.dispatch(job)
 
     async def _get_managed_user(
         self,
@@ -238,17 +233,6 @@ class PlatformUserAdministrationService:
         if user is None:
             raise PlatformUserNotFoundError()
         return user
-
-    @staticmethod
-    async def _send_email(
-        send: Callable[..., Awaitable[None]],
-        **kwargs: str,
-    ) -> bool:
-        try:
-            await send(**kwargs)
-        except OSError:
-            return False
-        return True
 
     @staticmethod
     def to_response(user: User) -> PlatformUserResponse:

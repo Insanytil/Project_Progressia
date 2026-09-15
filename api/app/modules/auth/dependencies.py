@@ -12,6 +12,7 @@ from app.core.config import settings
 from app.core.security import verify_secret
 from app.db.session import get_async_session
 from app.models.user import User
+from app.modules.auth.account_settings_service import AccountSettingsService
 from app.modules.auth.auth_service import (
     AuthService,
     AuthenticatedSession,
@@ -98,6 +99,18 @@ async def get_password_reset_service(
 PasswordResetServiceDep = Annotated[
     PasswordResetService,
     Depends(get_password_reset_service),
+]
+
+
+async def get_account_settings_service(
+    session: AsyncSession = Depends(get_async_session),
+) -> AccountSettingsService:
+    return AccountSettingsService(session)
+
+
+AccountSettingsServiceDep = Annotated[
+    AccountSettingsService,
+    Depends(get_account_settings_service),
 ]
 
 async def get_authenticated_session(

@@ -35,6 +35,28 @@ services:
 
     restart: unless-stopped
 
+  redis:
+    image: redis:8-alpine
+    container_name: Progressia-redis
+
+    command: redis-server --appendonly yes
+
+    ports:
+      - ${REDIS_PORT:-6379}:6379
+
+    volumes:
+      - redis_data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    restart: unless-stopped
+
 volumes:
   postgres_data:
     name: Progressia-database-data
+  redis_data:
+    name: Progressia-redis-data

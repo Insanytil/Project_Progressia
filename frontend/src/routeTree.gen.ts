@@ -17,13 +17,11 @@ import { Route as GuestLoginRouteImport } from './routes/_guest/login'
 import { Route as NeutralIndexRouteImport } from './routes/_neutral/index'
 import { Route as NeutralResetPasswordRouteImport } from './routes/_neutral/reset-password'
 import { Route as ProtectedSuperuserRouteImport } from './routes/_protected/_superuser'
+import { Route as ProtectedAdministrationRouteImport } from './routes/_protected/administration'
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
-import { Route as ProtectedOrganizationsRouteImport } from './routes/_protected/organizations'
+import { Route as ProtectedJobsRouteImport } from './routes/_protected/jobs'
+import { Route as ProtectedSettingsRouteImport } from './routes/_protected/settings'
 import { Route as ProtectedSuperuserPlatformAdministrationRouteImport } from './routes/_protected/_superuser/platformAdministration'
-import { Route as ProtectedOrganizationsIndexRouteImport } from './routes/_protected/organizations/index'
-import { Route as ProtectedOrganizationsOrganizationSlugRouteImport } from './routes/_protected/organizations/$organizationSlug'
-import { Route as ProtectedOrganizationsOrganizationSlugIndexRouteImport } from './routes/_protected/organizations/$organizationSlug/index'
-import { Route as ProtectedOrganizationsOrganizationSlugDashboardRouteImport } from './routes/_protected/organizations/$organizationSlug/dashboard'
 
 const GuestRoute = GuestRouteImport.update({
   id: '/_guest',
@@ -61,14 +59,24 @@ const ProtectedSuperuserRoute = ProtectedSuperuserRouteImport.update({
   id: '/_superuser',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedAdministrationRoute = ProtectedAdministrationRouteImport.update({
+  id: '/administration',
+  path: '/administration',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ProtectedDashboardRoute = ProtectedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => ProtectedRoute,
 } as any)
-const ProtectedOrganizationsRoute = ProtectedOrganizationsRouteImport.update({
-  id: '/organizations',
-  path: '/organizations',
+const ProtectedJobsRoute = ProtectedJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedSettingsRoute = ProtectedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => ProtectedRoute,
 } as any)
 const ProtectedSuperuserPlatformAdministrationRoute =
@@ -77,54 +85,28 @@ const ProtectedSuperuserPlatformAdministrationRoute =
     path: '/platformAdministration',
     getParentRoute: () => ProtectedSuperuserRoute,
   } as any)
-const ProtectedOrganizationsIndexRoute =
-  ProtectedOrganizationsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => ProtectedOrganizationsRoute,
-  } as any)
-const ProtectedOrganizationsOrganizationSlugRoute =
-  ProtectedOrganizationsOrganizationSlugRouteImport.update({
-    id: '/$organizationSlug',
-    path: '/$organizationSlug',
-    getParentRoute: () => ProtectedOrganizationsRoute,
-  } as any)
-const ProtectedOrganizationsOrganizationSlugIndexRoute =
-  ProtectedOrganizationsOrganizationSlugIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => ProtectedOrganizationsOrganizationSlugRoute,
-  } as any)
-const ProtectedOrganizationsOrganizationSlugDashboardRoute =
-  ProtectedOrganizationsOrganizationSlugDashboardRouteImport.update({
-    id: '/dashboard',
-    path: '/dashboard',
-    getParentRoute: () => ProtectedOrganizationsOrganizationSlugRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof NeutralIndexRoute
   '/activate': typeof GuestActivateRoute
   '/login': typeof GuestLoginRoute
   '/reset-password': typeof NeutralResetPasswordRoute
+  '/administration': typeof ProtectedAdministrationRoute
   '/dashboard': typeof ProtectedDashboardRoute
-  '/organizations': typeof ProtectedOrganizationsRouteWithChildren
+  '/jobs': typeof ProtectedJobsRoute
+  '/settings': typeof ProtectedSettingsRoute
   '/platformAdministration': typeof ProtectedSuperuserPlatformAdministrationRoute
-  '/organizations/$organizationSlug': typeof ProtectedOrganizationsOrganizationSlugRouteWithChildren
-  '/organizations/': typeof ProtectedOrganizationsIndexRoute
-  '/organizations/$organizationSlug/dashboard': typeof ProtectedOrganizationsOrganizationSlugDashboardRoute
-  '/organizations/$organizationSlug/': typeof ProtectedOrganizationsOrganizationSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof NeutralIndexRoute
   '/activate': typeof GuestActivateRoute
   '/login': typeof GuestLoginRoute
   '/reset-password': typeof NeutralResetPasswordRoute
+  '/administration': typeof ProtectedAdministrationRoute
   '/dashboard': typeof ProtectedDashboardRoute
+  '/jobs': typeof ProtectedJobsRoute
+  '/settings': typeof ProtectedSettingsRoute
   '/platformAdministration': typeof ProtectedSuperuserPlatformAdministrationRoute
-  '/organizations': typeof ProtectedOrganizationsIndexRoute
-  '/organizations/$organizationSlug/dashboard': typeof ProtectedOrganizationsOrganizationSlugDashboardRoute
-  '/organizations/$organizationSlug': typeof ProtectedOrganizationsOrganizationSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -135,14 +117,12 @@ export interface FileRoutesById {
   '/_guest/login': typeof GuestLoginRoute
   '/_neutral/reset-password': typeof NeutralResetPasswordRoute
   '/_protected/_superuser': typeof ProtectedSuperuserRouteWithChildren
+  '/_protected/administration': typeof ProtectedAdministrationRoute
   '/_protected/dashboard': typeof ProtectedDashboardRoute
-  '/_protected/organizations': typeof ProtectedOrganizationsRouteWithChildren
+  '/_protected/jobs': typeof ProtectedJobsRoute
+  '/_protected/settings': typeof ProtectedSettingsRoute
   '/_neutral/': typeof NeutralIndexRoute
   '/_protected/_superuser/platformAdministration': typeof ProtectedSuperuserPlatformAdministrationRoute
-  '/_protected/organizations/$organizationSlug': typeof ProtectedOrganizationsOrganizationSlugRouteWithChildren
-  '/_protected/organizations/': typeof ProtectedOrganizationsIndexRoute
-  '/_protected/organizations/$organizationSlug/dashboard': typeof ProtectedOrganizationsOrganizationSlugDashboardRoute
-  '/_protected/organizations/$organizationSlug/': typeof ProtectedOrganizationsOrganizationSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,24 +131,22 @@ export interface FileRouteTypes {
     | '/activate'
     | '/login'
     | '/reset-password'
+    | '/administration'
     | '/dashboard'
-    | '/organizations'
+    | '/jobs'
+    | '/settings'
     | '/platformAdministration'
-    | '/organizations/$organizationSlug'
-    | '/organizations/'
-    | '/organizations/$organizationSlug/dashboard'
-    | '/organizations/$organizationSlug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/activate'
     | '/login'
     | '/reset-password'
+    | '/administration'
     | '/dashboard'
+    | '/jobs'
+    | '/settings'
     | '/platformAdministration'
-    | '/organizations'
-    | '/organizations/$organizationSlug/dashboard'
-    | '/organizations/$organizationSlug'
   id:
     | '__root__'
     | '/_guest'
@@ -178,14 +156,12 @@ export interface FileRouteTypes {
     | '/_guest/login'
     | '/_neutral/reset-password'
     | '/_protected/_superuser'
+    | '/_protected/administration'
     | '/_protected/dashboard'
-    | '/_protected/organizations'
+    | '/_protected/jobs'
+    | '/_protected/settings'
     | '/_neutral/'
     | '/_protected/_superuser/platformAdministration'
-    | '/_protected/organizations/$organizationSlug'
-    | '/_protected/organizations/'
-    | '/_protected/organizations/$organizationSlug/dashboard'
-    | '/_protected/organizations/$organizationSlug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -252,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedSuperuserRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/administration': {
+      id: '/_protected/administration'
+      path: '/administration'
+      fullPath: '/administration'
+      preLoaderRoute: typeof ProtectedAdministrationRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/dashboard': {
       id: '/_protected/dashboard'
       path: '/dashboard'
@@ -259,11 +242,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedDashboardRouteImport
       parentRoute: typeof ProtectedRoute
     }
-    '/_protected/organizations': {
-      id: '/_protected/organizations'
-      path: '/organizations'
-      fullPath: '/organizations'
-      preLoaderRoute: typeof ProtectedOrganizationsRouteImport
+    '/_protected/jobs': {
+      id: '/_protected/jobs'
+      path: '/jobs'
+      fullPath: '/jobs'
+      preLoaderRoute: typeof ProtectedJobsRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/settings': {
+      id: '/_protected/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof ProtectedSettingsRouteImport
       parentRoute: typeof ProtectedRoute
     }
     '/_protected/_superuser/platformAdministration': {
@@ -272,34 +262,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/platformAdministration'
       preLoaderRoute: typeof ProtectedSuperuserPlatformAdministrationRouteImport
       parentRoute: typeof ProtectedSuperuserRoute
-    }
-    '/_protected/organizations/': {
-      id: '/_protected/organizations/'
-      path: '/'
-      fullPath: '/organizations/'
-      preLoaderRoute: typeof ProtectedOrganizationsIndexRouteImport
-      parentRoute: typeof ProtectedOrganizationsRoute
-    }
-    '/_protected/organizations/$organizationSlug': {
-      id: '/_protected/organizations/$organizationSlug'
-      path: '/$organizationSlug'
-      fullPath: '/organizations/$organizationSlug'
-      preLoaderRoute: typeof ProtectedOrganizationsOrganizationSlugRouteImport
-      parentRoute: typeof ProtectedOrganizationsRoute
-    }
-    '/_protected/organizations/$organizationSlug/': {
-      id: '/_protected/organizations/$organizationSlug/'
-      path: '/'
-      fullPath: '/organizations/$organizationSlug/'
-      preLoaderRoute: typeof ProtectedOrganizationsOrganizationSlugIndexRouteImport
-      parentRoute: typeof ProtectedOrganizationsOrganizationSlugRoute
-    }
-    '/_protected/organizations/$organizationSlug/dashboard': {
-      id: '/_protected/organizations/$organizationSlug/dashboard'
-      path: '/dashboard'
-      fullPath: '/organizations/$organizationSlug/dashboard'
-      preLoaderRoute: typeof ProtectedOrganizationsOrganizationSlugDashboardRouteImport
-      parentRoute: typeof ProtectedOrganizationsOrganizationSlugRoute
     }
   }
 }
@@ -341,51 +303,20 @@ const ProtectedSuperuserRouteChildren: ProtectedSuperuserRouteChildren = {
 const ProtectedSuperuserRouteWithChildren =
   ProtectedSuperuserRoute._addFileChildren(ProtectedSuperuserRouteChildren)
 
-interface ProtectedOrganizationsOrganizationSlugRouteChildren {
-  ProtectedOrganizationsOrganizationSlugDashboardRoute: typeof ProtectedOrganizationsOrganizationSlugDashboardRoute
-  ProtectedOrganizationsOrganizationSlugIndexRoute: typeof ProtectedOrganizationsOrganizationSlugIndexRoute
-}
-
-const ProtectedOrganizationsOrganizationSlugRouteChildren: ProtectedOrganizationsOrganizationSlugRouteChildren =
-  {
-    ProtectedOrganizationsOrganizationSlugDashboardRoute:
-      ProtectedOrganizationsOrganizationSlugDashboardRoute,
-    ProtectedOrganizationsOrganizationSlugIndexRoute:
-      ProtectedOrganizationsOrganizationSlugIndexRoute,
-  }
-
-const ProtectedOrganizationsOrganizationSlugRouteWithChildren =
-  ProtectedOrganizationsOrganizationSlugRoute._addFileChildren(
-    ProtectedOrganizationsOrganizationSlugRouteChildren,
-  )
-
-interface ProtectedOrganizationsRouteChildren {
-  ProtectedOrganizationsOrganizationSlugRoute: typeof ProtectedOrganizationsOrganizationSlugRouteWithChildren
-  ProtectedOrganizationsIndexRoute: typeof ProtectedOrganizationsIndexRoute
-}
-
-const ProtectedOrganizationsRouteChildren: ProtectedOrganizationsRouteChildren =
-  {
-    ProtectedOrganizationsOrganizationSlugRoute:
-      ProtectedOrganizationsOrganizationSlugRouteWithChildren,
-    ProtectedOrganizationsIndexRoute: ProtectedOrganizationsIndexRoute,
-  }
-
-const ProtectedOrganizationsRouteWithChildren =
-  ProtectedOrganizationsRoute._addFileChildren(
-    ProtectedOrganizationsRouteChildren,
-  )
-
 interface ProtectedRouteChildren {
   ProtectedSuperuserRoute: typeof ProtectedSuperuserRouteWithChildren
+  ProtectedAdministrationRoute: typeof ProtectedAdministrationRoute
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
-  ProtectedOrganizationsRoute: typeof ProtectedOrganizationsRouteWithChildren
+  ProtectedJobsRoute: typeof ProtectedJobsRoute
+  ProtectedSettingsRoute: typeof ProtectedSettingsRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedSuperuserRoute: ProtectedSuperuserRouteWithChildren,
+  ProtectedAdministrationRoute: ProtectedAdministrationRoute,
   ProtectedDashboardRoute: ProtectedDashboardRoute,
-  ProtectedOrganizationsRoute: ProtectedOrganizationsRouteWithChildren,
+  ProtectedJobsRoute: ProtectedJobsRoute,
+  ProtectedSettingsRoute: ProtectedSettingsRoute,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(

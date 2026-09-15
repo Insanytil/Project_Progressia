@@ -1,5 +1,5 @@
 import { Link, useMatchRoute } from '@tanstack/react-router'
-import { Building2, LayoutDashboard, RefreshCw } from 'lucide-react'
+import { Building2, LayoutDashboard, ListTodo, ShieldCheck } from 'lucide-react'
 
 import {
   SidebarGroup,
@@ -27,33 +27,36 @@ export function SidebarNavigation({ user, currentOrganization }: SidebarNavigati
       <SidebarGroupContent>
         <SidebarMenu>
           {user?.is_superuser ? (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                render={<Link to="/platformAdministration" onClick={() => setOpenMobile(false)} />}
-                isActive={Boolean(matchRoute({ to: '/platformAdministration', fuzzy: true }))}
-                tooltip="Administration"
-                className="h-10 data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground"
-              >
-                <Building2 />
-                <span>Administration</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            <>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={<Link to="/platformAdministration" onClick={() => setOpenMobile(false)} />}
+                  isActive={Boolean(matchRoute({ to: '/platformAdministration', fuzzy: true }))}
+                  tooltip="Administration"
+                  className="h-10 data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground"
+                >
+                  <Building2 />
+                  <span>Administration</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={<Link to="/jobs" onClick={() => setOpenMobile(false)} />}
+                  isActive={Boolean(matchRoute({ to: '/jobs', fuzzy: true }))}
+                  tooltip="Jobs"
+                  className="h-10 data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground"
+                >
+                  <ListTodo />
+                  <span>Jobs</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </>
           ) : currentOrganization ? (
             <>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  render={(
-                    <Link
-                      to="/organizations/$organizationSlug/dashboard"
-                      params={{ organizationSlug: currentOrganization.slug }}
-                      onClick={() => setOpenMobile(false)}
-                    />
-                  )}
-                  isActive={Boolean(matchRoute({
-                    to: '/organizations/$organizationSlug/dashboard',
-                    params: { organizationSlug: currentOrganization.slug },
-                    fuzzy: true,
-                  }))}
+                  render={<Link to="/dashboard" onClick={() => setOpenMobile(false)} />}
+                  isActive={Boolean(matchRoute({ to: '/dashboard', fuzzy: true }))}
                   tooltip="Tableau de bord"
                   className="h-10 data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground"
                 >
@@ -61,30 +64,34 @@ export function SidebarNavigation({ user, currentOrganization }: SidebarNavigati
                   <span>Tableau de bord</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              {(user?.organizations.length ?? 0) > 1 && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    render={<Link to="/organizations" onClick={() => setOpenMobile(false)} />}
-                    tooltip="Changer d’organisation"
-                  >
-                    <RefreshCw />
-                    <span>Changer d’organisation</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              {currentOrganization.role === 'organization_admin' && (
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      render={<Link to="/administration" onClick={() => setOpenMobile(false)} />}
+                      isActive={Boolean(matchRoute({ to: '/administration', fuzzy: true }))}
+                      tooltip="Administration"
+                      className="h-10 data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground"
+                    >
+                      <ShieldCheck />
+                      <span>Administration</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      render={<Link to="/jobs" onClick={() => setOpenMobile(false)} />}
+                      isActive={Boolean(matchRoute({ to: '/jobs', fuzzy: true }))}
+                      tooltip="Jobs"
+                      className="h-10 data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground"
+                    >
+                      <ListTodo />
+                      <span>Jobs</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
               )}
             </>
-          ) : (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                render={<Link to="/organizations" onClick={() => setOpenMobile(false)} />}
-                isActive={Boolean(matchRoute({ to: '/organizations', fuzzy: true }))}
-                tooltip="Choisir une organisation"
-              >
-                <Building2 />
-                <span>Choisir une organisation</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
+          ) : null}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

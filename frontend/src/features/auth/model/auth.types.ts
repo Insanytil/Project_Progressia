@@ -10,7 +10,12 @@ export type AuthenticatedUser = {
   email: string
   is_superuser: boolean
   is_verified: boolean
+  default_organization_id: string | null
   organizations: AuthenticatedOrganization[]
+}
+
+export type UpdateAccountPreferencesInput = {
+  default_organization_id: string | null
 }
 
 export type LoginCredentials = {

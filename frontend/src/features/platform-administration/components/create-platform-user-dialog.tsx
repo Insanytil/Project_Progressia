@@ -41,10 +41,10 @@ export function CreatePlatformUserDialog({ open, onOpenChange }: CreatePlatformU
           organization_id: value.organizationId === 'none' ? null : value.organizationId,
           role: value.organizationId === 'none' ? null : value.role,
         })
-        if (result.invitation_sent) {
-          toast.success('Compte créé et invitation envoyée.')
+        if (result.invitation_queued) {
+          toast.success('Compte créé et invitation mise en file d’attente.')
         } else {
-          toast.warning('Compte créé, mais Mailpit est indisponible. L’invitation n’a pas été envoyée.')
+          toast.warning('Compte créé, mais Redis est indisponible. L’invitation n’a pas été mise en file.')
         }
         form.reset()
         onOpenChange(false)

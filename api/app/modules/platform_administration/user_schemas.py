@@ -57,7 +57,7 @@ class PlatformUserResponse(BaseModel):
 
 class CreatePlatformUserResponse(BaseModel):
     user: PlatformUserResponse
-    invitation_sent: bool
+    invitation_queued: bool
 
 
 class UpdatePlatformUserRequest(BaseModel):
@@ -65,7 +65,14 @@ class UpdatePlatformUserRequest(BaseModel):
 
 
 class UpdateOrganizationAccessRequest(BaseModel):
-    is_active: bool
+    is_active: bool | None = None
+    role: OrganizationRole | None = None
+
+    @model_validator(mode="after")
+    def validate_changes(self) -> Self:
+        if self.is_active is None and self.role is None:
+            raise ValueError("At least one membership change is required")
+        return self
 
 
 class AddOrganizationMemberRequest(BaseModel):
@@ -74,4 +81,4 @@ class AddOrganizationMemberRequest(BaseModel):
 
 
 class EmailDispatchResponse(BaseModel):
-    sent: bool
+    queued: bool

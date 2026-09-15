@@ -43,11 +43,15 @@ export function useUpdatePlatformUserMutation() {
 export function useUpdateOrganizationAccessMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ userId, organizationId, isActive }: {
+    mutationFn: ({ userId, organizationId, isActive, role }: {
       userId: string
       organizationId: string
       isActive: boolean
-    }) => updateUserOrganizationAccess(userId, organizationId, { is_active: isActive }),
+      role: Parameters<typeof updateUserOrganizationAccess>[2]['role']
+    }) => updateUserOrganizationAccess(userId, organizationId, {
+      is_active: isActive,
+      role,
+    }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: platformUserQueryKeys.all }),
   })
 }

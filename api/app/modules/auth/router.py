@@ -15,6 +15,7 @@ from app.modules.auth.cookies import (
     set_auth_cookies,
 )
 from app.modules.auth.dependencies import (
+    AccountSettingsServiceDep,
     CsrfProtectedSession,
     CurrentUser,
     InvitationServiceDep,
@@ -22,6 +23,7 @@ from app.modules.auth.dependencies import (
     get_auth_service,
 )
 from app.modules.auth.exceptions import (
+    InvalidDefaultOrganizationError,
     InvalidCredentialsError,
     InvalidInvitationError,
     InvalidPasswordResetTokenError,
@@ -34,6 +36,7 @@ from app.modules.auth.schemas import (
     InvitationResponse,
     LoginRequest,
     PasswordResetResponse,
+    UpdateCurrentUserPreferencesRequest,
 )
 
 
@@ -119,13 +122,42 @@ async def get_me(
         )
         if membership.is_active and membership.organization.is_active
     ]
+    available_organization_ids = {
+        organization.id for organization in organizations
+    }
     return CurrentUserResponse(
         id=user.id,
         email=user.email,
         is_superuser=user.is_superuser,
         is_verified=user.is_verified,
+        default_organization_id=(
+            user.default_organization_id
+            if user.default_organization_id in available_organization_ids
+            else None
+        ),
         organizations=organizations,
     )
+
+
+@router.patch(
+    "/me/preferences",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def update_my_preferences(
+    payload: UpdateCurrentUserPreferencesRequest,
+    auth: CsrfProtectedSession,
+    service: AccountSettingsServiceDep,
+) -> None:
+    try:
+        await service.set_default_organization(
+            user=auth.user,
+            organization_id=payload.default_organization_id,
+        )
+    except InvalidDefaultOrganizationError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Default organization must be an active user membership",
+        ) from None
 
 
 @router.get(

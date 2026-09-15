@@ -1,23 +1,18 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 
+import { getStoredOrganizationId } from '@/lib/organization-scope-storage'
+
 import { isUnauthorizedError } from '../api/auth-errors'
 import { currentUserQueryOptions } from '../queries/auth-queries'
-import type { AuthenticatedOrganization, AuthenticatedUser } from '../model/auth.types'
+import type { AuthenticatedUser } from '../model/auth.types'
 
 function redirectToUserHome(user: AuthenticatedUser): never {
   if (user.is_superuser) {
     throw redirect({ to: '/platformAdministration' })
   }
 
-  if (user.organizations.length === 1) {
-    throw redirect({
-      to: '/organizations/$organizationSlug/dashboard',
-      params: { organizationSlug: user.organizations[0].slug },
-    })
-  }
-
-  throw redirect({ to: '/organizations' })
+  throw redirect({ to: '/dashboard' })
 }
 
 export async function requireGuest(queryClient: QueryClient) {
@@ -52,34 +47,41 @@ export async function requireSuperuser(queryClient: QueryClient) {
   }
 }
 
+export async function requireCurrentOrganizationAdmin(queryClient: QueryClient) {
+  const user = await queryClient.ensureQueryData(currentUserQueryOptions)
+  if (user.is_superuser) {
+    throw redirect({ to: '/platformAdministration' })
+  }
+
+  const storedOrganizationId = getStoredOrganizationId()
+  const organization = user.organizations.find(
+    (candidate) => candidate.id === storedOrganizationId,
+  ) ?? user.organizations.find(
+    (candidate) => candidate.id === user.default_organization_id,
+  ) ?? user.organizations[0]
+
+  if (organization?.role !== 'organization_admin') {
+    throw redirect({ to: '/dashboard' })
+  }
+}
+
+export async function requireJobsAdmin(queryClient: QueryClient) {
+  const user = await queryClient.ensureQueryData(currentUserQueryOptions)
+  if (user.is_superuser) return
+
+  const storedOrganizationId = getStoredOrganizationId()
+  const organization = user.organizations.find(
+    (candidate) => candidate.id === storedOrganizationId,
+  ) ?? user.organizations.find(
+    (candidate) => candidate.id === user.default_organization_id,
+  ) ?? user.organizations[0]
+
+  if (organization?.role !== 'organization_admin') {
+    throw redirect({ to: '/dashboard' })
+  }
+}
+
 export async function redirectToAuthenticatedHome(queryClient: QueryClient): Promise<never> {
   const user = await queryClient.ensureQueryData(currentUserQueryOptions)
   return redirectToUserHome(user)
-}
-
-export async function requireOrganizationUser(queryClient: QueryClient): Promise<void> {
-  const user = await queryClient.ensureQueryData(currentUserQueryOptions)
-  if (user.is_superuser) {
-    throw redirect({ to: '/platformAdministration' })
-  }
-}
-
-export async function requireOrganizationScope(
-  queryClient: QueryClient,
-  organizationSlug: string,
-): Promise<AuthenticatedOrganization> {
-  const user = await queryClient.ensureQueryData(currentUserQueryOptions)
-
-  if (user.is_superuser) {
-    throw redirect({ to: '/platformAdministration' })
-  }
-
-  const organization = user.organizations.find(
-    (candidate) => candidate.slug === organizationSlug,
-  )
-  if (!organization) {
-    throw redirect({ to: '/organizations' })
-  }
-
-  return organization
 }

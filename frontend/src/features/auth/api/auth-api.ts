@@ -7,6 +7,7 @@ import type {
   Invitation,
   LoginCredentials,
   PasswordReset,
+  UpdateAccountPreferencesInput,
 } from '../model/auth.types'
 
 export async function getCurrentUser(): Promise<AuthenticatedUser> {
@@ -20,6 +21,12 @@ export async function login(credentials: LoginCredentials): Promise<void> {
 
 export async function logout(): Promise<void> {
   await apiClient.post('/auth/logout')
+}
+
+export async function updateAccountPreferences(
+  input: UpdateAccountPreferencesInput,
+): Promise<void> {
+  await apiClient.patch('/auth/me/preferences', input)
 }
 
 export async function getInvitation(token: string): Promise<Invitation> {

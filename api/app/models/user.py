@@ -1,8 +1,9 @@
+import uuid
 from typing import TYPE_CHECKING
 
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
-from sqlalchemy.orm import Mapped, relationship
-from sqlalchemy import Index, func
+from sqlalchemy import ForeignKey, Index, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.db.base_entity import TimestampMixin
@@ -27,6 +28,14 @@ class User(
     Base,
 ):
     __tablename__ = "users"
+
+    default_organization_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey(
+            "organizations.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+    )
 
     organization_memberships: Mapped[
         list["OrganizationMembership"]

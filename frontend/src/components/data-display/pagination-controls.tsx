@@ -28,13 +28,7 @@ export function PaginationControls({ page, totalPages, onPageChange }: Paginatio
         </PaginationItem>
         {getVisiblePages(page, totalPages).map((pageNumber) => (
           <PaginationItem key={pageNumber}>
-            <Button
-              variant={pageNumber === page ? 'outline' : 'ghost'}
-              size="icon"
-              onClick={() => onPageChange(pageNumber)}
-              aria-label={`Page ${pageNumber}`}
-              aria-current={pageNumber === page ? 'page' : undefined}
-            >
+            <Button variant={pageNumber === page ? 'outline' : 'ghost'} size="icon" onClick={() => onPageChange(pageNumber)} aria-label={`Page ${pageNumber}`} aria-current={pageNumber === page ? 'page' : undefined}>
               {pageNumber}
             </Button>
           </PaginationItem>

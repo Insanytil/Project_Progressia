@@ -1,15 +1,12 @@
-from datetime import timedelta
 from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
-from app.core.email import SmtpEmailSender
 from app.db.session import get_async_session
 from app.modules.auth.dependencies import get_user_manager
-from app.modules.auth.invitation_repository import UserInvitationRepository
-from app.modules.auth.password_reset_repository import PasswordResetTokenRepository
 from app.modules.auth.user_manager import UserManager
+from app.modules.jobs.repository import BackgroundJobRepository
+from app.modules.jobs.service import BackgroundJobService
 from app.modules.platform_administration.repository import (
     OrganizationRepository,
 )
@@ -42,21 +39,11 @@ async def get_platform_user_administration_service(
         db=session,
         user_repository=PlatformUserRepository(session),
         organization_repository=OrganizationRepository(session),
-        invitation_repository=UserInvitationRepository(session),
-        password_reset_repository=PasswordResetTokenRepository(session),
+        job_service=BackgroundJobService(
+            session,
+            BackgroundJobRepository(session),
+        ),
         user_manager=user_manager,
-        email_sender=SmtpEmailSender(
-            host=settings.smtp_host,
-            port=settings.smtp_port,
-            sender_email=settings.smtp_sender_email,
-            frontend_base_url=settings.frontend_base_url,
-        ),
-        invitation_lifetime=timedelta(
-            hours=settings.invitation_lifetime_hours,
-        ),
-        password_reset_lifetime=timedelta(
-            minutes=settings.password_reset_lifetime_minutes,
-        ),
     )
 
 

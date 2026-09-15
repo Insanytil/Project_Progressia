@@ -1,3 +1,4 @@
+from app.models.background_job import BackgroundJob
 from app.models.organization import Organization
 from app.models.organization_membership import OrganizationMembership
 from app.models.password_reset_token import PasswordResetToken
@@ -8,6 +9,7 @@ from app.models.user_invitation import UserInvitation
 
 
 __all__ = [
+    "BackgroundJob",
     "AuthSession",
     "Organization",
     "OrganizationMembership",

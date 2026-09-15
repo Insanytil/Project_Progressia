@@ -15,7 +15,7 @@ type PlatformUserTableProps = {
   onSendPasswordReset: (user: PlatformUser) => void
   onToggleActive: (user: PlatformUser) => void
   onAddToOrganization: (user: PlatformUser) => void
-  onToggleOrganizationAccess: (user: PlatformUser, membership: UserMembership) => void
+  onManageMembership: (user: PlatformUser, membership: UserMembership) => void
 }
 
 export function PlatformUserTable({
@@ -27,7 +27,7 @@ export function PlatformUserTable({
   onSendPasswordReset,
   onToggleActive,
   onAddToOrganization,
-  onToggleOrganizationAccess,
+  onManageMembership,
 }: PlatformUserTableProps) {
   return (
     <div className="h-full overflow-auto rounded-xl border bg-card [&>[data-slot=table-container]]:overflow-visible">
@@ -78,7 +78,7 @@ export function PlatformUserTable({
                   <UserMembershipsDropdown
                     memberships={user.memberships}
                     disabled={Boolean(pendingMembershipId)}
-                    onToggleAccess={(membership) => onToggleOrganizationAccess(user, membership)}
+                    onManageMembership={(membership) => onManageMembership(user, membership)}
                   />
                 </TableCell>
                 <TableCell>

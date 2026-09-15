@@ -1,12 +1,22 @@
 import { useNavigate } from '@tanstack/react-router'
-import { LoaderCircle, LogOut } from 'lucide-react'
+import { ChevronsUpDown, LoaderCircle, LogOut, Settings } from 'lucide-react'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   SidebarFooter,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { useLogoutMutation } from '@/features/auth'
 import type { AuthenticatedUser } from '@/features/auth'
@@ -22,6 +32,7 @@ type SidebarUserProps = {
 export function SidebarUser({ user }: SidebarUserProps) {
   const logoutMutation = useLogoutMutation()
   const navigate = useNavigate()
+  const { isMobile, setOpenMobile } = useSidebar()
 
   async function handleLogout() {
     try {
@@ -34,29 +45,63 @@ export function SidebarUser({ user }: SidebarUserProps) {
 
   return (
     <SidebarFooter className="border-t border-sidebar-border p-2">
-      <div className="flex min-w-0 items-center gap-3 rounded-lg px-2 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-        <Avatar className="ring-2 ring-sidebar-border">
-          <AvatarFallback className="bg-secondary font-semibold text-primary">
-            {user ? getInitials(user.email) : 'PR'}
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-          <p className="truncate text-sm font-medium">Mon compte</p>
-          <p className="truncate text-xs text-sidebar-foreground/60">{user?.email}</p>
-        </div>
-      </div>
-
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton
-            tooltip="Se déconnecter"
-            disabled={logoutMutation.isPending}
-            onClick={() => void handleLogout()}
-            className="h-9 text-sidebar-foreground/75 hover:text-destructive"
-          >
-            {logoutMutation.isPending ? <LoaderCircle className="animate-spin" /> : <LogOut />}
-            <span>{logoutMutation.isPending ? 'Déconnexion…' : 'Se déconnecter'}</span>
-          </SidebarMenuButton>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={<SidebarMenuButton size="lg" tooltip="Mon compte" />}
+            >
+              <Avatar className="size-8 ring-2 ring-sidebar-border">
+                <AvatarFallback className="bg-secondary text-xs font-semibold text-primary">
+                  {user ? getInitials(user.email) : 'PR'}
+                </AvatarFallback>
+              </Avatar>
+              <span className="min-w-0 flex-1 text-left group-data-[collapsible=icon]:hidden">
+                <span className="block truncate text-sm font-medium">Mon compte</span>
+                <span className="block truncate text-xs text-sidebar-foreground/60">
+                  {user?.email}
+                </span>
+              </span>
+              <ChevronsUpDown className="ml-auto group-data-[collapsible=icon]:hidden" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side={isMobile ? 'top' : 'right'}
+              align="end"
+              className="min-w-64"
+            >
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="font-normal">
+                  <span className="block truncate font-medium">Mon compte</span>
+                  <span className="block truncate text-xs text-muted-foreground">{user?.email}</span>
+                </DropdownMenuLabel>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setOpenMobile(false)
+                    void navigate({ to: '/settings' })
+                  }}
+                >
+                  <Settings />
+                  Paramètres
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  disabled={logoutMutation.isPending}
+                  variant="destructive"
+                  onClick={() => void handleLogout()}
+                >
+                  {logoutMutation.isPending
+                    ? <LoaderCircle className="animate-spin" />
+                    : <LogOut />}
+                  {logoutMutation.isPending ? 'Déconnexion…' : 'Se déconnecter'}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </SidebarMenuItem>
       </SidebarMenu>
 

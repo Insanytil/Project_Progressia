@@ -1,11 +1,11 @@
-import { Building2, ChevronDown } from 'lucide-react'
+import { Building2, ChevronDown, Settings2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -21,13 +21,13 @@ const roleLabels: Record<OrganizationRole, string> = {
 type UserMembershipsDropdownProps = {
   memberships: UserMembership[]
   disabled: boolean
-  onToggleAccess: (membership: UserMembership) => void
+  onManageMembership: (membership: UserMembership) => void
 }
 
 export function UserMembershipsDropdown({
   memberships,
   disabled,
-  onToggleAccess,
+  onManageMembership,
 }: UserMembershipsDropdownProps) {
   if (memberships.length === 0) return <span className="text-muted-foreground">Aucune</span>
 
@@ -42,20 +42,20 @@ export function UserMembershipsDropdown({
         <DropdownMenuGroup>
           <DropdownMenuLabel>Accès aux organisations</DropdownMenuLabel>
           {memberships.map((membership) => (
-            <DropdownMenuCheckboxItem
+            <DropdownMenuItem
               key={membership.organization_id}
-              checked={membership.is_active}
               disabled={disabled}
-              onCheckedChange={() => onToggleAccess(membership)}
+              onClick={() => onManageMembership(membership)}
               className="items-start py-2"
             >
+              <Settings2 className="mt-0.5" />
               <span className="grid gap-0.5">
                 <span className="font-medium">{membership.organization_name}</span>
                 <span className="text-xs text-muted-foreground">
                   {roleLabels[membership.role]} · {membership.is_active ? 'Accès actif' : 'Accès suspendu'}
                 </span>
               </span>
-            </DropdownMenuCheckboxItem>
+            </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>
       </DropdownMenuContent>

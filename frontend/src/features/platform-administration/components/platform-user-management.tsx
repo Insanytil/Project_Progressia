@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
+import { Plus, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { PaginationControls } from '@/components/data-display/pagination-controls'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
+import { MembershipAccessDialog } from '@/features/memberships/components/membership-access-dialog'
+import { MemberImportDialog } from '@/features/member-imports/components/member-import-dialog'
 
 import type { PlatformUser, UserMembership } from '../model/user.types'
 import {
@@ -18,7 +21,6 @@ import { useOrganizationOptions } from '../hooks/use-organization-options'
 import { platformUsersQueryOptions } from '../queries/user-queries'
 import { CreatePlatformUserDialog } from './create-platform-user-dialog'
 import { AddUserToOrganizationDialog } from './add-user-to-organization-dialog'
-import { PaginationControls } from './pagination-controls'
 import { PlatformUserFilters, type UserAccountStatusFilter } from './platform-user-filters'
 import { PlatformUserTable } from './platform-user-table'
 
@@ -28,7 +30,12 @@ export function PlatformUserManagement() {
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput.trim())
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [userToAddToOrganization, setUserToAddToOrganization] = useState<PlatformUser | null>(null)
+  const [membershipToManage, setMembershipToManage] = useState<{
+    user: PlatformUser
+    membership: UserMembership
+  } | null>(null)
   const [organizationId, setOrganizationId] = useState('all')
   const [accountStatus, setAccountStatus] = useState<UserAccountStatusFilter>('all')
   const params = useMemo(() => ({
@@ -52,9 +59,9 @@ export function PlatformUserManagement() {
   async function resendVerification(user: PlatformUser) {
     try {
       const result = await verificationMutation.mutateAsync(user.id)
-      result.sent
-        ? toast.success('E-mail de vérification envoyé.')
-        : toast.warning('Le lien a été renouvelé, mais l’e-mail n’a pas pu être envoyé.')
+      result.queued
+        ? toast.success('E-mail de vérification mis en file d’attente.')
+        : toast.warning('Le lien a été renouvelé, mais Redis est indisponible.')
     } catch {
       toast.error('L’e-mail de vérification n’a pas pu être envoyé.')
     }
@@ -63,9 +70,9 @@ export function PlatformUserManagement() {
   async function sendPasswordReset(user: PlatformUser) {
     try {
       const result = await passwordResetMutation.mutateAsync(user.id)
-      result.sent
-        ? toast.success('E-mail de réinitialisation envoyé.')
-        : toast.warning('Le lien a été créé, mais l’e-mail n’a pas pu être envoyé.')
+      result.queued
+        ? toast.success('E-mail de réinitialisation mis en file d’attente.')
+        : toast.warning('Le lien a été créé, mais Redis est indisponible.')
     } catch {
       toast.error('L’e-mail de réinitialisation n’a pas pu être envoyé.')
     }
@@ -80,14 +87,20 @@ export function PlatformUserManagement() {
     }
   }
 
-  async function toggleOrganizationAccess(user: PlatformUser, membership: UserMembership) {
+  async function updateMembership(
+    user: PlatformUser,
+    membership: UserMembership,
+    changes: { role: UserMembership['role']; isActive: boolean },
+  ) {
     try {
       await accessMutation.mutateAsync({
         userId: user.id,
         organizationId: membership.organization_id,
-        isActive: !membership.is_active,
+        isActive: changes.isActive,
+        role: changes.role,
       })
-      toast.success(membership.is_active ? 'Accès à l’organisation suspendu.' : 'Accès à l’organisation réactivé.')
+      toast.success('Accès à l’organisation mis à jour.')
+      setMembershipToManage(null)
     } catch {
       toast.error('L’accès à cette organisation n’a pas pu être modifié.')
     }
@@ -100,7 +113,10 @@ export function PlatformUserManagement() {
           <h2 className="text-xl font-semibold tracking-tight">Comptes utilisateurs</h2>
           <p className="mt-1 text-sm text-muted-foreground">Créez les comptes et suivez l’état des invitations.</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}><Plus />Nouvel utilisateur</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setImportDialogOpen(true)}><Upload />Importer</Button>
+          <Button onClick={() => setDialogOpen(true)}><Plus />Nouvel utilisateur</Button>
+        </div>
       </div>
       <PlatformUserFilters
         search={searchInput}
@@ -136,7 +152,7 @@ export function PlatformUserManagement() {
             onSendPasswordReset={(user) => void sendPasswordReset(user)}
             onToggleActive={(user) => void toggleUserActive(user)}
             onAddToOrganization={setUserToAddToOrganization}
-            onToggleOrganizationAccess={(user, membership) => void toggleOrganizationAccess(user, membership)}
+            onManageMembership={(user, membership) => setMembershipToManage({ user, membership })}
           />
         </div>
       )}
@@ -152,6 +168,13 @@ export function PlatformUserManagement() {
         </div>
       )}
       <CreatePlatformUserDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <MemberImportDialog
+        open={importDialogOpen}
+        mode="platform"
+        organizations={organizationOptions.organizations}
+        onOpenChange={setImportDialogOpen}
+        onCompleted={() => { void usersQuery.refetch() }}
+      />
       <AddUserToOrganizationDialog
         user={userToAddToOrganization}
         organizations={organizationOptions.organizations}
@@ -159,6 +182,22 @@ export function PlatformUserManagement() {
           if (!open) setUserToAddToOrganization(null)
         }}
       />
+      {membershipToManage && (
+        <MembershipAccessDialog
+          key={`${membershipToManage.user.id}-${membershipToManage.membership.organization_id}`}
+          title={membershipToManage.membership.organization_name}
+          description={`Modifiez le rôle et l’accès de ${membershipToManage.user.email}.`}
+          role={membershipToManage.membership.role}
+          isActive={membershipToManage.membership.is_active}
+          isPending={accessMutation.isPending}
+          onClose={() => setMembershipToManage(null)}
+          onSubmit={(changes) => updateMembership(
+            membershipToManage.user,
+            membershipToManage.membership,
+            changes,
+          )}
+        />
+      )}
     </div>
   )
 }

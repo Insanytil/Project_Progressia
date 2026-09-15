@@ -32,7 +32,7 @@ export type CreatePlatformUserInput = {
 
 export type CreatePlatformUserResult = {
   user: PlatformUser
-  invitation_sent: boolean
+  invitation_queued: boolean
 }
 
 export type UpdatePlatformUserInput = {
@@ -40,11 +40,12 @@ export type UpdatePlatformUserInput = {
 }
 
 export type UpdateOrganizationAccessInput = {
-  is_active: boolean
+  is_active?: boolean
+  role?: OrganizationRole
 }
 
 export type EmailDispatchResult = {
-  sent: boolean
+  queued: boolean
 }
 
 export type AddOrganizationMembershipInput = {

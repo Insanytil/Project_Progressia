@@ -35,7 +35,12 @@ class CurrentUserResponse(BaseModel):
     email: str
     is_superuser: bool
     is_verified: bool
+    default_organization_id: uuid.UUID | None
     organizations: list[CurrentOrganizationResponse]
+
+
+class UpdateCurrentUserPreferencesRequest(BaseModel):
+    default_organization_id: uuid.UUID | None
 
 
 class InvitationResponse(BaseModel):

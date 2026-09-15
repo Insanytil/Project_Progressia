@@ -22,7 +22,7 @@ import {
 } from './organization-filters'
 import { OrganizationFormDialog } from './organization-form-dialog'
 import { OrganizationTable } from './organization-table'
-import { PaginationControls } from './pagination-controls'
+import { PaginationControls } from '@/components/data-display/pagination-controls'
 
 export function OrganizationManagement() {
   const [page, setPage] = useState(1)

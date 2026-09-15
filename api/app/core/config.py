@@ -1,8 +1,13 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import SecretStr, PositiveInt
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
+
+
+API_DIR = Path(__file__).resolve().parents[2]
+
 
 class Settings(BaseSettings):
     app_name: str = "Progressia API"
@@ -29,6 +34,9 @@ class Settings(BaseSettings):
     smtp_host: str = "127.0.0.1"
     smtp_port: int = 1025
     smtp_sender_email: str = "no-reply@progressia.local"
+
+    celery_broker_url: str = "redis://127.0.0.1:6379/0"
+    celery_result_backend: str = "redis://127.0.0.1:6379/1"
 
     model_config = SettingsConfigDict(
         env_file=".env",
