@@ -13,6 +13,7 @@ from app.modules.jobs.exceptions import (
     BackgroundJobActionNotAllowedError,
     BackgroundJobNotFoundError,
 )
+from app.modules.jobs.events import publish_job_updated
 from app.modules.jobs.repository import BackgroundJobRepository
 from app.modules.jobs.schemas import (
     BackgroundJobGroupResponse,
@@ -92,11 +93,13 @@ class BackgroundJobService:
             task_id=uuid.UUID(job.celery_task_id),
         )
         if dispatched:
+            await publish_job_updated(job)
             return True
         job.status = BackgroundJobStatus.FAILED
         job.last_error = "The job could not be published to Redis"
         job.finished_at = datetime.now(UTC)
         await self.db.commit()
+        await publish_job_updated(job)
         return False
 
     async def cancel(
@@ -111,6 +114,7 @@ class BackgroundJobService:
         job.status = BackgroundJobStatus.CANCELLED
         job.finished_at = datetime.now(UTC)
         await self.db.commit()
+        await publish_job_updated(job)
         revoke_job(task_id=uuid.UUID(job.celery_task_id))
 
     async def retry(

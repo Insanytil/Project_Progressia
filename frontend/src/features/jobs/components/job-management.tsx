@@ -9,6 +9,7 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useCancelJobMutation, useRetryJobMutation } from '../mutations/use-job-mutations'
 import type { JobActionTarget, JobScope, JobStatus, JobType } from '../model/job.types'
 import { jobsQueryOptions } from '../queries/job-queries'
+import { useJobEvents } from '../queries/use-job-events'
 import { JobCancelDialog } from './job-cancel-dialog'
 import { JobFilters } from './job-filters'
 import { JobTable } from './job-table'
@@ -21,6 +22,7 @@ type JobManagementProps = {
 }
 
 export function JobManagement({ scope, organizations }: JobManagementProps) {
+  useJobEvents(scope)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [searchInput, setSearchInput] = useState('')

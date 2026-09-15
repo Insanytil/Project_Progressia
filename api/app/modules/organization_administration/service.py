@@ -111,7 +111,11 @@ class OrganizationAdministrationService:
             organization_id=organization_id,
             user_id=user_id,
         )
-        if role is not None:
+        if role is not None and role != membership.role:
+            await self.repository.clear_curriculum_assignments(
+                organization_id=organization_id,
+                user_id=user_id,
+            )
             membership.role = role
         if is_active is not None:
             membership.is_active = is_active

@@ -17,9 +17,12 @@ type MemberTableProps = {
   pendingUserId?: string
   onManage: (member: OrganizationMember) => void
   onPasswordReset: (member: OrganizationMember) => void
+  onManageTeachingAuthorizations: (member: OrganizationMember) => void
+  onManageStudentEnrollment: (member: OrganizationMember) => void
+  curriculumActionsDisabled?: boolean
 }
 
-export function MemberTable({ members, isLoading, pendingUserId, onManage, onPasswordReset }: MemberTableProps) {
+export function MemberTable({ members, isLoading, pendingUserId, onManage, onPasswordReset, onManageTeachingAuthorizations, onManageStudentEnrollment, curriculumActionsDisabled }: MemberTableProps) {
   return (
     <div className="h-full overflow-auto rounded-xl border bg-card [&>[data-slot=table-container]]:overflow-visible">
       <Table>
@@ -47,7 +50,7 @@ export function MemberTable({ members, isLoading, pendingUserId, onManage, onPas
               <TableCell>{roleLabels[member.role]}</TableCell>
               <TableCell><Badge variant={member.membership_is_active ? 'secondary' : 'outline'}>{member.membership_is_active ? 'Actif' : 'Désactivé'}</Badge></TableCell>
               <TableCell><Badge variant={member.is_verified ? 'secondary' : 'outline'}>{member.is_verified ? 'Vérifié' : 'En attente'}</Badge></TableCell>
-              <TableCell><MemberActions member={member} isPending={pendingUserId === member.id} onManage={() => onManage(member)} onPasswordReset={() => onPasswordReset(member)} /></TableCell>
+              <TableCell><MemberActions member={member} isPending={pendingUserId === member.id} onManage={() => onManage(member)} onPasswordReset={() => onPasswordReset(member)} onManageTeachingAuthorizations={() => onManageTeachingAuthorizations(member)} onManageStudentEnrollment={() => onManageStudentEnrollment(member)} curriculumActionsDisabled={curriculumActionsDisabled} /></TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -9,6 +9,7 @@ import { PaginationControls } from '@/components/data-display/pagination-control
 import { MembershipAccessDialog } from '@/features/memberships/components/membership-access-dialog'
 import { MemberImportDialog } from '@/features/member-imports/components/member-import-dialog'
 import { useOrganizationContext } from '@/features/organization-context'
+import { useAcademicYearContext } from '@/features/academic-year-context'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 
 import {
@@ -20,9 +21,12 @@ import { organizationMembersQueryOptions } from '../queries/member-queries'
 import { MemberFilters, type MembershipStatusFilter } from './member-filters'
 import { MemberTable } from './member-table'
 import { CreateMemberDialog } from './create-member-dialog'
+import { ManageStudentEnrollmentDialog } from './manage-student-enrollment-dialog'
+import { ManageTeacherAuthorizationsDialog } from './manage-teacher-authorizations-dialog'
 
 export function MemberManagement() {
   const { currentOrganization } = useOrganizationContext()
+  const { currentAcademicYear } = useAcademicYearContext()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [searchInput, setSearchInput] = useState('')
@@ -30,6 +34,8 @@ export function MemberManagement() {
   const [memberToManage, setMemberToManage] = useState<OrganizationMember | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [teacherToManage, setTeacherToManage] = useState<OrganizationMember | null>(null)
+  const [studentToManage, setStudentToManage] = useState<OrganizationMember | null>(null)
   const search = useDebouncedValue(searchInput.trim())
   const params = useMemo(() => ({
     page,
@@ -47,6 +53,8 @@ export function MemberManagement() {
   useEffect(() => {
     setPage(1)
     setMemberToManage(null)
+    setTeacherToManage(null)
+    setStudentToManage(null)
   }, [search, currentOrganization?.id])
 
   async function updateMember(changes: { role: OrganizationMember['role']; isActive: boolean }) {
@@ -84,12 +92,14 @@ export function MemberManagement() {
         <Alert variant="destructive"><AlertTitle>Chargement impossible</AlertTitle><AlertDescription>Les membres n’ont pas pu être récupérés.</AlertDescription></Alert>
       ) : (
         <div className={`min-h-0 flex-1 ${membersQuery.isFetching && !membersQuery.isPending ? 'opacity-65' : ''}`}>
-          <MemberTable members={membersQuery.data?.items ?? []} isLoading={membersQuery.isPending} pendingUserId={updateMutation.isPending ? updateMutation.variables?.userId : resetMutation.isPending ? resetMutation.variables?.userId : undefined} onManage={setMemberToManage} onPasswordReset={(member) => void sendPasswordReset(member)} />
+          <MemberTable members={membersQuery.data?.items ?? []} isLoading={membersQuery.isPending} pendingUserId={updateMutation.isPending ? updateMutation.variables?.userId : resetMutation.isPending ? resetMutation.variables?.userId : undefined} onManage={setMemberToManage} onPasswordReset={(member) => void sendPasswordReset(member)} onManageTeachingAuthorizations={setTeacherToManage} onManageStudentEnrollment={setStudentToManage} curriculumActionsDisabled={!currentAcademicYear} />
         </div>
       )}
       {membersQuery.data && <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground"><p>{membersQuery.data.pagination.total} membre{membersQuery.data.pagination.total > 1 ? 's' : ''}</p><PaginationControls page={membersQuery.data.pagination.page} totalPages={membersQuery.data.pagination.total_pages} onPageChange={setPage} /></div>}
       {memberToManage && <MembershipAccessDialog key={memberToManage.id} title={memberToManage.email} description={`Modifiez son rôle et son accès à ${currentOrganization?.name}.`} role={memberToManage.role} isActive={memberToManage.membership_is_active} isPending={updateMutation.isPending} onClose={() => setMemberToManage(null)} onSubmit={updateMember} />}
       {currentOrganization && <CreateMemberDialog open={createDialogOpen} organizationId={currentOrganization.id} organizationName={currentOrganization.name} onOpenChange={setCreateDialogOpen} />}
+      {currentOrganization && currentAcademicYear && teacherToManage && <ManageTeacherAuthorizationsDialog key={`${teacherToManage.id}-${currentAcademicYear.id}`} member={teacherToManage} organizationId={currentOrganization.id} academicYearId={currentAcademicYear.id} academicYearLabel={currentAcademicYear.label} onClose={() => setTeacherToManage(null)} />}
+      {currentOrganization && currentAcademicYear && studentToManage && <ManageStudentEnrollmentDialog key={`${studentToManage.id}-${currentAcademicYear.id}`} member={studentToManage} organizationId={currentOrganization.id} academicYearId={currentAcademicYear.id} academicYearLabel={currentAcademicYear.label} onClose={() => setStudentToManage(null)} />}
       <MemberImportDialog
         open={importDialogOpen}
         mode="organization"

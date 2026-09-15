@@ -1,12 +1,14 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.models.organization_membership import OrganizationMembership
 from app.models.organization_role import OrganizationRole
 from app.models.user import User
+from app.models.student_study_option_enrollment import StudentStudyOptionEnrollment
+from app.models.teacher_course_authorization import TeacherCourseAuthorization
 
 
 class OrganizationMemberRepository:
@@ -118,3 +120,22 @@ class OrganizationMemberRepository:
         if for_update:
             statement = statement.with_for_update(of=OrganizationMembership)
         return await self.db.scalar(statement)
+
+    async def clear_curriculum_assignments(
+        self,
+        *,
+        organization_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> None:
+        await self.db.execute(
+            delete(TeacherCourseAuthorization).where(
+                TeacherCourseAuthorization.organization_id == organization_id,
+                TeacherCourseAuthorization.teacher_id == user_id,
+            )
+        )
+        await self.db.execute(
+            delete(StudentStudyOptionEnrollment).where(
+                StudentStudyOptionEnrollment.organization_id == organization_id,
+                StudentStudyOptionEnrollment.student_id == user_id,
+            )
+        )

@@ -17,6 +17,7 @@ from app.models.background_job import (
 from app.models.user import User
 from app.modules.auth.invitation_repository import UserInvitationRepository
 from app.modules.auth.password_reset_repository import PasswordResetTokenRepository
+from app.modules.jobs.events import publish_job_updated
 from app.workers.celery_app import celery_app
 
 
@@ -73,6 +74,7 @@ async def _process_email_job(job_id: uuid.UUID) -> None:
         job.finished_at = None
         job.last_error = None
         await session.commit()
+        await publish_job_updated(job)
 
         if job.subject_user_id is None:
             raise PermanentEmailJobError("The target user no longer exists")
@@ -123,6 +125,7 @@ async def _process_email_job(job_id: uuid.UUID) -> None:
         job.status = BackgroundJobStatus.SUCCEEDED
         job.finished_at = datetime.now(UTC)
         await session.commit()
+        await publish_job_updated(job)
 
 
 async def _record_failure(
@@ -145,6 +148,7 @@ async def _record_failure(
         job.last_error = str(error)[:2000] or error.__class__.__name__
         job.finished_at = datetime.now(UTC) if final else None
         await session.commit()
+        await publish_job_updated(job)
 
 
 @celery_app.task(

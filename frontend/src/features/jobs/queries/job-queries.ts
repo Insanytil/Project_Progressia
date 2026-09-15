@@ -22,7 +22,6 @@ export function jobBatchQueryOptions(scope: JobScope, batchId: string) {
   return queryOptions({
     queryKey: jobQueryKeys.batch(scope, batchId),
     queryFn: () => getJobBatch(scope, batchId),
-    refetchInterval: 3_000,
   })
 }
 
@@ -31,6 +30,5 @@ export function jobsQueryOptions(scope: JobScope, params: JobListParams) {
     queryKey: jobQueryKeys.list(scope, params),
     queryFn: () => getJobs(scope, params),
     placeholderData: keepPreviousData,
-    refetchInterval: 3_000,
   })
 }

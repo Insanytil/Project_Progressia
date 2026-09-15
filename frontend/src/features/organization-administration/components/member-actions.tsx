@@ -1,4 +1,4 @@
-import { KeyRound, MoreHorizontal, Settings2 } from 'lucide-react'
+import { BookCheck, GraduationCap, KeyRound, MoreHorizontal, Settings2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -17,9 +17,12 @@ type MemberActionsProps = {
   isPending: boolean
   onManage: () => void
   onPasswordReset: () => void
+  onManageTeachingAuthorizations: () => void
+  onManageStudentEnrollment: () => void
+  curriculumActionsDisabled?: boolean
 }
 
-export function MemberActions({ member, isPending, onManage, onPasswordReset }: MemberActionsProps) {
+export function MemberActions({ member, isPending, onManage, onPasswordReset, onManageTeachingAuthorizations, onManageStudentEnrollment, curriculumActionsDisabled }: MemberActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
@@ -32,6 +35,8 @@ export function MemberActions({ member, isPending, onManage, onPasswordReset }: 
           <DropdownMenuItem disabled={isPending} onClick={onManage}>
             <Settings2 />Modifier le rôle et l’accès
           </DropdownMenuItem>
+          {member.role === 'teacher' && <DropdownMenuItem disabled={isPending || curriculumActionsDisabled} onClick={onManageTeachingAuthorizations}><BookCheck />Gérer les cours autorisés</DropdownMenuItem>}
+          {member.role === 'student' && <DropdownMenuItem disabled={isPending || curriculumActionsDisabled} onClick={onManageStudentEnrollment}><GraduationCap />Gérer l’option annuelle</DropdownMenuItem>}
           <DropdownMenuItem
             disabled={!member.is_verified || isPending}
             onClick={onPasswordReset}

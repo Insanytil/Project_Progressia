@@ -15,6 +15,7 @@ from app.db.base_entity import BaseEntity
 
 
 if TYPE_CHECKING:
+    from app.models.organization_academic_year import OrganizationAcademicYear
     from app.models.organization_membership import OrganizationMembership
 
 
@@ -55,6 +56,13 @@ class Organization(BaseEntity):
 
     memberships: Mapped[list["OrganizationMembership"]] = relationship(
         back_populates="organization",
+        passive_deletes=True,
+        lazy="raise",
+    )
+
+    academic_years: Mapped[list["OrganizationAcademicYear"]] = relationship(
+        back_populates="organization",
+        cascade="all, delete-orphan",
         passive_deletes=True,
         lazy="raise",
     )

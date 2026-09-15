@@ -11,6 +11,7 @@ import { currentUserQueryOptions } from '@/features/auth'
 import { useOrganizationContext } from '@/features/organization-context'
 
 import { OrganizationSwitcher } from './organization-switcher'
+import { AcademicYearSwitcher } from './academic-year-switcher'
 import { SidebarNavigation } from './sidebar-navigation'
 import { SidebarUser } from './sidebar-user'
 
@@ -25,6 +26,7 @@ export function AppSidebar() {
         {user && !user.is_superuser && (
           <OrganizationSwitcher />
         )}
+        {user && !user.is_superuser && <AcademicYearSwitcher />}
       </SidebarHeader>
       <SidebarContent className="py-2">
         <SidebarNavigation user={user} currentOrganization={currentOrganization} />
